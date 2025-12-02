@@ -1,0 +1,59 @@
+[
+  {
+    "name": "Ultimate Windows Tweaker 5.1",
+    "type": "external_zip",
+    "url": "https://www.thewindowsclub.com/downloads/UWT5.zip",
+    "exe_inside": "Ultimate Windows Tweaker 5.1.exe",
+    "description": "Kapsamlı Windows ince ayar aracı."
+  },
+  {
+    "name": "Chocolatey Kur",
+    "type": "script",
+    "command": "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))",
+    "description": "Paket yöneticisi Chocolatey'i sisteme kurar."
+  },
+  {
+    "name": "DNS Jumper",
+    "type": "external_zip",
+    "url": "https://www.sordum.org/files/download/dns-jumper/DnsJumper.zip",
+    "exe_inside": "DnsJumper.exe",
+    "description": "Hızlı DNS değiştirme aracı."
+  },
+  {
+    "name": "BloatyNosy",
+    "type": "external_zip",
+    "url": "https://github.com/builtbybel/Bloatynosy/releases/download/1.4.0/BloatynosyApp.zip",
+    "exe_inside": "BloatynosyApp.exe",
+    "description": "Gereksiz Windows uygulamalarını kaldırma aracı."
+  },
+  {
+    "name": "Chris Titus Tech WinUtil",
+    "type": "script",
+    "command": "iwr -useb https://christitus.com/win | iex",
+    "description": "Chris Titus'un gelişmiş Windows optimizasyon aracı."
+  },
+  {
+    "name": "Msi Utility V3",
+    "type": "local_exe",
+    "path": "assets/tools/msiutil.exe",
+    "description": "Ekran kartı gecikme düşürme (MSI Mode) aracı."
+  },
+  {
+    "name": "SSD Booster",
+    "type": "external_exe",
+    "url": "https://files1.majorgeeks.com/10afebdbffcd4742c81a3cb0f6ce4092156b4375/drives/SSDBooster.exe",
+    "description": "SSD performans optimizasyonu."
+  },
+  {
+    "name": "Optimizer",
+    "type": "external_exe",
+    "url": "https://github.com/hellzerg/optimizer/releases/download/16.4/Optimizer-16.4.exe",
+    "description": "Gelişmiş gizlilik ve performans ayarları."
+  },
+  {
+    "name": "WingetUI",
+    "type": "winget",
+    "id": "SomePythonThings.WingetUIStore",
+    "description": "Winget için grafik arayüz."
+  }
+]

@@ -1,0 +1,167 @@
+[
+  {
+    "name": "Discord",
+    "id": "Discord.Discord",
+    "description": "Sesli ve yazılı sohbet uygulaması."
+  },
+  {
+    "name": "Steam",
+    "id": "Valve.Steam",
+    "description": "Oyun platformu."
+  },
+  {
+    "name": "MSI Afterburner",
+    "id": "Guru3D.Afterburner",
+    "description": "Ekran kartı overclock aracı."
+  },
+  {
+    "name": "Notebook FanControl",
+    "id": "Hirschmann.NoteBookFanControl",
+    "description": "Laptop fan hızı kontrolü."
+  },
+  {
+    "name": "BlueStacks",
+    "id": "BlueStack.BlueStacks",
+    "description": "Android emülatörü."
+  },
+  {
+    "name": "FxSound",
+    "id": "FxSound.FxSound",
+    "description": "Ses kalitesi arttırma."
+  },
+  {
+    "name": "Lively Wallpaper",
+    "id": "DaniJohn.LivelyWallpaper",
+    "description": "Hareketli masaüstü arka planı."
+  },
+  {
+    "name": "WinRAR",
+    "id": "RARLab.WinRAR",
+    "description": "Dosya sıkıştırma yöneticisi."
+  },
+  {
+    "name": "VLC Media Player",
+    "id": "VideoLAN.VLC",
+    "description": "Medya oynatıcı."
+  },
+  {
+    "name": "HWInfo",
+    "id": "REALiX.HWiNFO",
+    "description": "Donanım bilgisi görüntüleme."
+  },
+  {
+    "name": "Spacedesk Driver",
+    "id": "datronicsoft.spacedeskDriver",
+    "description": "İkinci ekran sürücüsü."
+  },
+  {
+    "name": "Nvidia GeForce Experience",
+    "id": "Nvidia.GeForceExperience",
+    "description": "Nvidia sürücü ve oyun optimizasyonu."
+  },
+  {
+    "name": "WhatsApp",
+    "id": "WhatsApp.WhatsApp",
+    "description": "Mesajlaşma uygulaması."
+  },
+  {
+    "name": "Zoom",
+    "id": "Zoom.Zoom",
+    "description": "Video konferans."
+  },
+  {
+    "name": "Opera GX",
+    "id": "Opera.OperaGX",
+    "description": "Oyuncular için tarayıcı."
+  },
+  {
+    "name": "Spotify",
+    "id": "Spotify.Spotify",
+    "description": "Müzik dinleme platformu."
+  },
+  {
+    "name": "iTunes",
+    "id": "Apple.iTunes",
+    "description": "Apple medya oynatıcı."
+  },
+  {
+    "name": "Deezer",
+    "id": "Deezer.Deezer",
+    "description": "Müzik platformu."
+  },
+  {
+    "name": "Epic Games Launcher",
+    "id": "EpicGames.EpicGamesLauncher",
+    "description": "Oyun platformu."
+  },
+  {
+    "name": "Skype",
+    "id": "Microsoft.Skype",
+    "description": "İletişim aracı."
+  },
+  {
+    "name": "Adobe Acrobat Reader DC",
+    "id": "Adobe.Acrobat.Reader.64-bit",
+    "description": "PDF görüntüleyici."
+  },
+  {
+    "name": "Yandex Disk",
+    "id": "Yandex.Disk",
+    "description": "Bulut depolama."
+  },
+  {
+    "name": "LibreOffice",
+    "id": "TheDocumentFoundation.LibreOffice",
+    "description": "Ofis yazılım paketi."
+  },
+  {
+    "name": "Google Chrome",
+    "id": "Google.Chrome",
+    "description": "Web tarayıcısı."
+  },
+  {
+    "name": "Cloudflare WARP",
+    "id": "Cloudflare.Warp",
+    "description": "DNS ve VPN aracı."
+  },
+  {
+    "name": "7-Zip",
+    "id": "7zip.7zip",
+    "description": "Açık kaynak dosya arşivleyici."
+  },
+  {
+    "name": "AIDA64 Extreme",
+    "id": "FinalWire.AIDA64.Extreme",
+    "description": "Sistem tanı ve benchmark."
+  },
+  {
+    "name": "Recuva",
+    "id": "Piriform.Recuva",
+    "description": "Dosya kurtarma aracı."
+  },
+  {
+    "name": "Rufus",
+    "id": "Rufus.Rufus",
+    "description": "Önyüklenebilir USB oluşturma."
+  },
+  {
+    "name": "Brave Browser",
+    "id": "Brave.Brave",
+    "description": "Gizlilik odaklı tarayıcı."
+  },
+  {
+    "name": "TeamViewer",
+    "id": "TeamViewer.TeamViewer",
+    "description": "Uzak masaüstü bağlantısı."
+  },
+  {
+    "name": "qBittorrent",
+    "id": "qBittorrent.qBittorrent",
+    "description": "Torrent istemcisi."
+  },
+  {
+    "name": "CCleaner",
+    "id": "Piriform.CCleaner",
+    "description": "Sistem temizleme aracı."
+  }
+]
