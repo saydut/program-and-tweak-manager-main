@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ program.page_title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="p-6 flex justify-between items-center max-w-7xl mx-auto w-full border-b border-gray-800">
+        <div class="text-2xl font-bold text-blue-500">saydut<span class="text-white">.com</span></div>
+        <div class="space-x-6">
+            <a href="/" class="text-white font-medium hover:text-blue-400 transition">Ana Sayfa</a>
+            <a href="#" class="text-gray-400 hover:text-white transition">Hakkımda</a>
+            <a href="#" class="text-gray-400 hover:text-white transition">İletişim</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-16 flex-grow">
+        <div class="max-w-4xl mx-auto">
+            
+            <a href="/" class="text-blue-400 hover:text-white transition mb-8 inline-flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Tüm Projelere Geri Dön
+            </a>
+
+            <div class="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700">
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-white">{{ program.name }}</h1>
+                
+                <p class="text-xl text-gray-400 mb-6">
+                    {{ program.description }}
+                </p>
+
+                <div class="flex items-center space-x-4 mb-8">
+                    <span class="text-sm font-mono bg-blue-500 px-3 py-1 rounded text-white font-bold">Versiyon: {{ program.version }}</span>
+                    <span class="text-sm font-mono bg-gray-700 px-3 py-1 rounded text-gray-300">Windows Uyumlu</span>
+                </div>
+                
+                <a href="{{ program.download_url }}" download class="inline-flex items-center justify-center 
+                                                                    bg-green-500 hover:bg-green-600 text-white font-bold 
+                                                                    py-3 px-8 rounded-lg transition duration-300 ease-in-out 
+                                                                    shadow-lg hover:shadow-xl text-lg">
+                    <i class="fas fa-download mr-3"></i> {{ program.name }} İndir
+                </a>
+                
+                <p class="mt-4 text-sm text-gray-500">Programın boyutu, sistem gereksinimleri vb. bilgileri buraya ekleyebilirsin.</p>
+                
+                <div class="mt-10 pt-6 border-t border-gray-700">
+                    <h2 class="text-3xl font-bold mb-4 text-white">Özellikler</h2>
+                    <ul class="list-disc list-inside space-y-2 text-gray-400 ml-4">
+                        <li>Tek tıkla program yükleme/kaldırma ve güncelleme.</li>
+                        <li>Format sonrası sistem ayarlarını otomatik yapılandırma (tweakler).</li>
+                        <li>Sistem bilgisi görüntüleme.</li>
+                        <li>Açık kaynak kodlu ve sade arayüz.</li>
+                    </ul>
+                </div>
+                
+            </div>
+            
+        </div>
+    </main>
+
+    <footer class="border-t border-gray-800 py-8 text-center text-gray-500 mt-auto">
+        &copy; 2025 Saydut Yazılım. 
+        <div class="mt-2 space-x-4 text-xl">
+            <a href="#" class="hover:text-blue-500"><i class="fab fa-github"></i></a>
+            <a href="#" class="hover:text-blue-400"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="hover:text-pink-500"><i class="fab fa-instagram"></i></a>
+        </div>
+    </footer>
+
+</body>
+</html>
