@@ -8,7 +8,7 @@ from src.ui.tabs.tweaks_tab import TweaksTab
 from src.ui.tabs.system_tab import SystemTab
 from src.ui.tabs.chocolatey_tab import ChocolateyTab
 from src.ui.tabs.uninstall_tab import UninstallTab
-from src.ui.tabs.updates_tab import UpdatesTab  # YENİ EKLENDİ
+from src.ui.tabs.updates_tab import UpdatesTab
 from src.utils.updater import Updater
 
 class MainWindow(QMainWindow):
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow):
         self.uninstall_tab = UninstallTab()
         self.tabs.addTab(self.uninstall_tab, "Kaldır")
         
-        # 4. Güncellemeler (YENİ)
+        # 4. Güncellemeler
         self.updates_tab = UpdatesTab()
         self.tabs.addTab(self.updates_tab, "Güncelle")
         
@@ -77,25 +77,44 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.system_tab, "Sistem")
 
     def check_updates(self):
+        """
+        Sunucudan güncelleme kontrolü yapar ve kullanıcıya sorar.
+        """
         remote_url = self.config.get("remote_version_url", "")
         if not remote_url:
             QMessageBox.warning(self, "Hata", "Config dosyasında güncelleme URL'si bulunamadı!")
             return
 
         updater = Updater(self.current_version, remote_url)
+        
+        # Updater'dan bilgi al
         has_update, new_ver, notes = updater.check_for_updates()
         
         if has_update:
-            msg = f"Yeni sürüm mevcut: {new_ver}\n\nDeğişiklikler:\n{notes}\n\nŞimdi indirip güncellemek ister misiniz?\n(Program yeniden başlatılacak)"
-            reply = QMessageBox.question(self, "Güncelleme Mevcut", msg, QMessageBox.Yes | QMessageBox.No)
+            # Kullanıcıya detaylı bilgi verelim
+            msg = (f"📢 <b>YENİ GÜNCELLEME MEVCUT!</b><br><br>"
+                   f"Eski Sürüm: {self.current_version}<br>"
+                   f"Yeni Sürüm: <b>{new_ver}</b><br><br>"
+                   f"<b>Yenilikler:</b><br>{notes}<br><br>"
+                   f"İndirip otomatik olarak güncellemek ister misiniz?<br>"
+                   f"<i>(Program otomatik olarak kapanıp açılacaktır)</i>")
+            
+            reply = QMessageBox.question(self, "Güncelleme Yöneticisi", msg, 
+                                       QMessageBox.Yes | QMessageBox.No)
             
             if reply == QMessageBox.Yes:
-                QMessageBox.information(self, "İndiriliyor", "Güncelleme indiriliyor, lütfen bekleyin...")
-                success = updater.download_and_install()
+                QMessageBox.information(self, "İndirme Başladı", 
+                                      "Güncelleme arka planda indiriliyor.\n"
+                                      "Lütfen bekleyin, işlem bitince program yeniden başlayacak.")
+                
+                # İndirme işlemini başlat (Dönüş değeri: Başarılı mı?, Mesaj)
+                success, status_msg = updater.download_and_install()
+                
                 if not success:
-                    QMessageBox.critical(self, "Hata", "Güncelleme indirilemedi!")
+                    # Hata varsa (veya geliştirici modundaysak) uyar
+                    QMessageBox.warning(self, "Güncelleme Başarısız", status_msg)
         else:
-            QMessageBox.information(self, "Bilgi", f"Programınız güncel ({self.current_version}).")
+            QMessageBox.information(self, "Durum", f"Sisteminiz zaten güncel.\nMevcut Sürüm: {self.current_version}")
 
     def show_about(self):
         QMessageBox.about(self, "Hakkında", 
