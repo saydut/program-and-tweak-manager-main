@@ -42,7 +42,6 @@ def create_restore_point(description="Saydut Program Yoneticisi"):
         else:
             # Hata varsa PowerShell çıktısını döndür
             err_msg = result.stderr.strip() or "Bilinmeyen bir hata oluştu."
-            # Sık karşılaşılan bir hata: Sistem Koruması kapalı olabilir veya 24 saat sınırı.
             return False, f"Hata: {err_msg}"
 
     except Exception as e:
@@ -55,4 +54,25 @@ def run_powershell(command):
         subprocess.run(["powershell", "-Command", command], creationflags=creationflags)
         return True
     except:
+        return False
+
+def check_and_request_admin():
+    """
+    Program yönetici değilse, yönetici olarak yeniden başlatır.
+    """
+    if is_admin():
+        return True
+
+    # Yönetici değilse, yeniden başlatmayı dene
+    try:
+        if getattr(sys, 'frozen', False):
+            # Eğer .exe ise
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        else:
+            # Eğer .py script ise
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        
+        sys.exit(0) # Eski (yetkisiz) programı kapat
+    except Exception as e:
+        print(f"Yönetici izni alınamadı: {e}")
         return False
