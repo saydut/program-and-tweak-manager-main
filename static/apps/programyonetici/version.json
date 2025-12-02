@@ -1,5 +1,5 @@
 {
     "version": "10.5.1",
-    "download_url": "https://ikincidomainin.com/static/apps/programyonetici/ProgramYonetici.zip",
+    "download_url": "https://ikincidomainin.com/static/apps/programyonetici/ProgramYonetici.exe",
     "changelog": "* Temalar Windows'a uyarlandı.\n* Chocolatey entegrasyonu yapıldı."
 }
