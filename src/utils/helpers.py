@@ -1,47 +1,58 @@
 import sys
-import ctypes
 import os
+import ctypes
+import subprocess
 
 def is_admin():
-    """Kullanıcının yönetici olup olmadığını kontrol eder."""
+    """Programın yönetici olarak çalışıp çalışmadığını kontrol eder."""
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
-def restart_as_admin():
-    """Programı yönetici haklarıyla yeniden başlatır."""
-    ctypes.windll.shell32.ShellExecuteW(
-        None, "runas", sys.executable, " ".join(sys.argv), None, 1
-    )
+def create_restore_point(description="Saydut Program Yoneticisi"):
+    """
+    Windows Sistem Geri Yükleme Noktası oluşturur.
+    PowerShell kullanır çünkü en güvenilir yöntem budur.
+    """
+    if not is_admin():
+        return False, "Yönetici izni gerekli."
 
-def is_dark_mode():
-    """Windows'un karanlık modda olup olmadığını kontrol eder."""
     try:
-        registry_path = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
-        value_name = 'AppsUseLightTheme'
-        key = ctypes.c_void_p()
-
-        result = ctypes.windll.advapi32.RegOpenKeyExW(
-            ctypes.c_uint32(0x80000001),  # HKEY_CURRENT_USER
-            ctypes.c_wchar_p(registry_path),
-            0,
-            0x20019,  # KEY_READ
-            ctypes.byref(key)
-        )
-
-        if result != 0:
-            return False
-
-        value = ctypes.c_uint32()
-        value_size = ctypes.c_uint32(ctypes.sizeof(value))
-        ctypes.windll.advapi32.RegQueryValueExW(
-            key, ctypes.c_wchar_p(value_name), None, None, ctypes.byref(value), ctypes.byref(value_size)
-        )
-        ctypes.windll.advapi32.RegCloseKey(key)
+        # PowerShell komutu: Checkpoint-Computer
+        # RestorePointType: MODIFY_SETTINGS (Ayarları değiştirmeden önce)
+        cmd = [
+            "powershell", 
+            "-Command", 
+            f'Checkpoint-Computer -Description "{description}" -RestorePointType "MODIFY_SETTINGS"'
+        ]
         
-        # 0 = Dark, 1 = Light. Biz Dark mode mu diye bakıyoruz.
-        return value.value == 0
+        # Konsol penceresi açılmadan arka planda çalıştır (CREATE_NO_WINDOW)
+        creationflags = 0x08000000 if sys.platform == "win32" else 0
+        
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            creationflags=creationflags
+        )
+
+        if result.returncode == 0:
+            return True, "Geri yükleme noktası başarıyla oluşturuldu."
+        else:
+            # Hata varsa PowerShell çıktısını döndür
+            err_msg = result.stderr.strip() or "Bilinmeyen bir hata oluştu."
+            # Sık karşılaşılan bir hata: Sistem Koruması kapalı olabilir veya 24 saat sınırı.
+            return False, f"Hata: {err_msg}"
+
     except Exception as e:
-        print(f"Tema algılama hatası: {e}")
+        return False, str(e)
+
+def run_powershell(command):
+    """Verilen PowerShell komutunu çalıştırır."""
+    try:
+        creationflags = 0x08000000 if sys.platform == "win32" else 0
+        subprocess.run(["powershell", "-Command", command], creationflags=creationflags)
+        return True
+    except:
         return False
