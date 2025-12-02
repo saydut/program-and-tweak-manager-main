@@ -138,7 +138,9 @@ class MainWindow(QMainWindow):
             # HATA YAKALAMA KISMI BURASI
             if new_ver is None:
                 # Eğer versiyon None dönmüşse bir hata olmuştur (404, Connection Error vb.)
-                QMessageBox.warning(self, "Bağlantı Hatası", f"Sunucu ile iletişim kurulamadı:\n{notes}")
+                # Eğer notes boş gelirse diye varsayılan bir mesaj ekleyelim
+                hata_mesaji = notes if notes else "Bilinmeyen bir ağ hatası oluştu."
+                QMessageBox.warning(self, "Bağlantı Hatası", f"Sunucuya bağlanırken hata oluştu:\n{hata_mesaji}")
             else:
                 QMessageBox.information(self, "Bilgi", f"Programınız güncel ({self.current_version}).")
 
