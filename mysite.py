@@ -9,7 +9,7 @@ PROGRAM_YONETICISI_DATA = {
     "description": "Format sonrası bilgisayarını tek tıkla kur. Programları yükle, güncelle ve sistem ayarlarını otomatik yap.",
     "version": "v2.0",
     # İndirme linki, PythonAnywhere'deki static dosya ayarına göre oluşur.
-    "download_url": "static/apps/programyonetici/ProgramYonetici.zip", 
+    "download_url":"/static/apps/programyonetici/ProgramYonetici.exe", # .zip yerine .exe öneriyorum (Madde 1 gereği)
     "page_title": "Program Yöneticisi - İncele ve İndir"
 }
 
