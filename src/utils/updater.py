@@ -2,8 +2,7 @@ import requests
 import os
 import sys
 import subprocess
-import tempfile
-import json
+import time
 from PyQt5.QtWidgets import QMessageBox
 
 class Updater:
@@ -18,7 +17,9 @@ class Updater:
         """Sunucudaki version.json dosyasını kontrol eder."""
         try:
             print(f"Güncelleme kontrol ediliyor: {self.remote_json_url}")
-            response = requests.get(self.remote_json_url, timeout=10)
+            # Cache önlemek için timestamp ekliyoruz
+            url_with_timestamp = f"{self.remote_json_url}?t={int(time.time())}"
+            response = requests.get(url_with_timestamp, timeout=10)
             response.raise_for_status()
             data = response.json()
             
@@ -26,9 +27,8 @@ class Updater:
             self.download_url = data.get("download_url")
             self.release_notes = data.get("changelog", "Yenilik notu bulunamadı.")
             
-            # Basit versiyon karşılaştırması (String olarak)
-            # Daha gelişmişi için packaging.version kullanılabilir ama şimdilik yeterli.
-            if self.new_version > self.current_version:
+            # Versiyon karşılaştırması
+            if self.new_version != self.current_version:
                 return True, self.new_version, self.release_notes
             else:
                 return False, self.current_version, "Program güncel."
@@ -38,60 +38,76 @@ class Updater:
             return False, None, str(e)
 
     def download_and_install(self):
-        """Yeni sürümü indirir ve değişimi başlatır."""
+        """Yeni sürümü indirir ve güvenli geçişi başlatır."""
+        
+        # --- [GÜVENLİK 1] GELİŞTİRME MODU KORUMASI ---
+        # Eğer program PyInstaller ile paketlenmemişse (exe değilse) çalışmayı durdur.
+        if not getattr(sys, 'frozen', False):
+            print("GÜVENLİK UYARISI: Script modunda güncelleme engellendi.")
+            return False, "Geliştirme ortamında güncelleme yapılamaz.\nBu koruma main.py dosyanızı silinmekten kurtardı."
+        # ---------------------------------------------
+
         if not self.download_url:
-            return False
+            return False, "İndirme linki bulunamadı."
 
         try:
-            # 1. Dosyayı İndir (Temp klasörüne değil, exe'nin yanına indiriyoruz ki taşıması kolay olsun)
             current_exe_path = os.path.abspath(sys.argv[0])
             current_dir = os.path.dirname(current_exe_path)
-            temp_filename = "Update_Temp.exe"
+            temp_filename = "Update_New.exe"
             download_path = os.path.join(current_dir, temp_filename)
             
+            # Dosyayı indir
             print(f"İndiriliyor: {self.download_url}")
             response = requests.get(self.download_url, stream=True)
             with open(download_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
             
-            print("İndirme tamamlandı. Yeniden başlatılıyor...")
+            # İndirilen dosyanın sağlamlığını basitçe kontrol et (Boyut 0 değilse)
+            if os.path.getsize(download_path) < 1024:
+                return False, "İndirilen dosya hatalı veya çok küçük."
+
+            print("İndirme tamamlandı. Geçiş yapılıyor...")
             
-            # 2. Bat Scripti Oluştur (Değişimi yapacak tetikçi)
-            self._create_and_run_bat(current_exe_path, download_path)
+            # Bat scripti ile güvenli geçiş yap
+            self._create_and_run_safe_bat(current_exe_path, download_path)
             
-            return True
+            return True, "Güncelleme başlatılıyor..."
 
         except Exception as e:
             print(f"İndirme/Kurulum hatası: {e}")
-            return False
+            return False, str(e)
 
-    def _create_and_run_bat(self, old_exe, new_exe):
+    def _create_and_run_safe_bat(self, current_exe, new_exe):
         """
-        Eski exe'yi silip yeni exe'yi onun yerine koyan ve uygulamayı yeniden başlatan .bat dosyası.
+        Eski exe'yi yedekler, yenisini koyar ve başlatır.
         """
-        batch_script_path = os.path.join(os.path.dirname(old_exe), "update_swapper.bat")
-        exe_name = os.path.basename(old_exe)
-        new_exe_name = os.path.basename(new_exe) # Update_Temp.exe
+        current_dir = os.path.dirname(current_exe)
+        exe_name = os.path.basename(current_exe)
+        backup_name = exe_name + ".old"
+        new_exe_name = os.path.basename(new_exe)
+        batch_script_path = os.path.join(current_dir, "update_installer.bat")
 
-        # Bat script içeriği
-        # 1. 2 saniye bekle (Programın kapanması için)
-        # 2. Eski exe'yi sil
-        # 3. Yeni inen dosyayı eski isme (ProgramYonetici.exe) çevir
-        # 4. Programı başlat
-        # 5. Bat dosyasını sil
+        # --- [GÜVENLİK 2] YEDEKLE VE DEĞİŞTİR MANTIĞI ---
+        # 1. Bekle (Program kapansın)
+        # 2. Varsa eski yedeği sil
+        # 3. Mevcut programın ismini .old yap (SİLME YOK, RENAME VAR)
+        # 4. Yeni inen dosyayı asıl isme çevir
+        # 5. Programı başlat
+        # 6. Bat dosyasını temizle
         
         script_content = f"""
 @echo off
-timeout /t 2 /nobreak > NUL
-del "{exe_name}"
-rename "{new_exe_name}" "{exe_name}"
+timeout /t 3 /nobreak > NUL
+if exist "{backup_name}" del "{backup_name}"
+move "{exe_name}" "{backup_name}"
+move "{new_exe_name}" "{exe_name}"
 start "" "{exe_name}"
 del "%~f0"
 """
         with open(batch_script_path, "w") as bat_file:
             bat_file.write(script_content)
 
-        # 3. Programı kapat ve scripti çalıştır
+        # Programı kapat ve scripti çalıştır
         subprocess.Popen([batch_script_path], shell=True)
         sys.exit()
