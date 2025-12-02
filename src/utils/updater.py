@@ -3,7 +3,6 @@ import os
 import sys
 import subprocess
 import time
-from PyQt5.QtWidgets import QMessageBox
 
 class Updater:
     def __init__(self, current_version, remote_json_url):
@@ -17,35 +16,48 @@ class Updater:
         """Sunucudaki version.json dosyasını kontrol eder."""
         try:
             print(f"Güncelleme kontrol ediliyor: {self.remote_json_url}")
+            
             # Cache önlemek için timestamp ekliyoruz
             url_with_timestamp = f"{self.remote_json_url}?t={int(time.time())}"
-            response = requests.get(url_with_timestamp, timeout=10)
+            
+            # Tarayıcı gibi görünmek için User-Agent ekliyoruz
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(url_with_timestamp, headers=headers, timeout=10)
+            
+            # 404 veya 500 hatası varsa exception fırlatır
             response.raise_for_status()
+            
             data = response.json()
             
             self.new_version = data.get("version")
             self.download_url = data.get("download_url")
             self.release_notes = data.get("changelog", "Yenilik notu bulunamadı.")
             
+            print(f"Sunucu versiyonu: {self.new_version}, Mevcut: {self.current_version}")
+
             # Versiyon karşılaştırması
-            if self.new_version != self.current_version:
+            if self.new_version and self.new_version != self.current_version:
                 return True, self.new_version, self.release_notes
             else:
                 return False, self.current_version, "Program güncel."
                 
+        except requests.exceptions.HTTPError as e:
+            return False, None, f"HTTP Hatası: {e}"
+        except requests.exceptions.ConnectionError:
+            return False, None, "İnternet bağlantısı yok veya sunucuya ulaşılamıyor."
         except Exception as e:
-            print(f"Güncelleme hatası: {e}")
-            return False, None, str(e)
+            return False, None, f"Beklenmeyen hata: {str(e)}"
 
     def download_and_install(self):
         """Yeni sürümü indirir ve güvenli geçişi başlatır."""
         
-        # --- [GÜVENLİK 1] GELİŞTİRME MODU KORUMASI ---
-        # Eğer program PyInstaller ile paketlenmemişse (exe değilse) çalışmayı durdur.
+        # Script modunda (geliştirme) güncellemeyi engelle
         if not getattr(sys, 'frozen', False):
             print("GÜVENLİK UYARISI: Script modunda güncelleme engellendi.")
-            return False, "Geliştirme ortamında güncelleme yapılamaz.\nBu koruma main.py dosyanızı silinmekten kurtardı."
-        # ---------------------------------------------
+            return False, "Geliştirme ortamında (IDE) güncelleme yapılamaz. Lütfen EXE dosyasını kullanın."
 
         if not self.download_url:
             return False, "İndirme linki bulunamadı."
@@ -58,18 +70,20 @@ class Updater:
             
             # Dosyayı indir
             print(f"İndiriliyor: {self.download_url}")
-            response = requests.get(self.download_url, stream=True)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            response = requests.get(self.download_url, headers=headers, stream=True)
+            response.raise_for_status()
+            
             with open(download_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
             
-            # İndirilen dosyanın sağlamlığını basitçe kontrol et (Boyut 0 değilse)
             if os.path.getsize(download_path) < 1024:
                 return False, "İndirilen dosya hatalı veya çok küçük."
 
             print("İndirme tamamlandı. Geçiş yapılıyor...")
-            
-            # Bat scripti ile güvenli geçiş yap
             self._create_and_run_safe_bat(current_exe_path, download_path)
             
             return True, "Güncelleme başlatılıyor..."
@@ -79,23 +93,12 @@ class Updater:
             return False, str(e)
 
     def _create_and_run_safe_bat(self, current_exe, new_exe):
-        """
-        Eski exe'yi yedekler, yenisini koyar ve başlatır.
-        """
         current_dir = os.path.dirname(current_exe)
         exe_name = os.path.basename(current_exe)
         backup_name = exe_name + ".old"
         new_exe_name = os.path.basename(new_exe)
         batch_script_path = os.path.join(current_dir, "update_installer.bat")
 
-        # --- [GÜVENLİK 2] YEDEKLE VE DEĞİŞTİR MANTIĞI ---
-        # 1. Bekle (Program kapansın)
-        # 2. Varsa eski yedeği sil
-        # 3. Mevcut programın ismini .old yap (SİLME YOK, RENAME VAR)
-        # 4. Yeni inen dosyayı asıl isme çevir
-        # 5. Programı başlat
-        # 6. Bat dosyasını temizle
-        
         script_content = f"""
 @echo off
 timeout /t 3 /nobreak > NUL
@@ -108,6 +111,5 @@ del "%~f0"
         with open(batch_script_path, "w") as bat_file:
             bat_file.write(script_content)
 
-        # Programı kapat ve scripti çalıştır
         subprocess.Popen([batch_script_path], shell=True)
         sys.exit()

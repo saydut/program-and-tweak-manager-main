@@ -10,6 +10,19 @@ def is_admin():
     except:
         return False
 
+def get_base_path():
+    """
+    Programın çalıştığı ana dizini döndürür.
+    PyInstaller ile derlendiğinde geçici klasörü (sys._MEIPASS),
+    normal çalışırken proje ana dizinini verir.
+    """
+    if getattr(sys, 'frozen', False):
+        # .exe içinde çalışıyorsa
+        return sys._MEIPASS
+    else:
+        # Normal .py olarak çalışıyorsa (src/utils/helpers.py -> ../../)
+        return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def create_restore_point(description="Saydut Program Yoneticisi"):
     """
     Windows Sistem Geri Yükleme Noktası oluşturur.

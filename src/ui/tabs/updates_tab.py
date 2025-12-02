@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QLabel, 
                              QTableWidget, QTableWidgetItem, QHeaderView, 
-                             QMessageBox, QCheckBox, QHBoxLayout, QProgressBar)
+                             QMessageBox, QCheckBox, QHBoxLayout, QProgressBar, QFrame)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import subprocess
 import sys
@@ -28,8 +28,10 @@ class CheckUpdatesThread(QThread):
             )
 
             if result.returncode != 0 and "No installed package found matching input criteria" not in result.stderr:
-                self.error_occurred.emit(f"Hata oluştu: {result.stderr}")
-                return
+                # Winget bazen hata kodu döndürse de çıktı verebilir, o yüzden stderr kontrolü önemli
+                if not result.stdout:
+                    self.error_occurred.emit(f"Hata oluştu: {result.stderr}")
+                    return
 
             output_lines = result.stdout.splitlines()
             parsed_data = self.parse_winget_output(output_lines)
@@ -46,14 +48,16 @@ class CheckUpdatesThread(QThread):
 
         for line in lines:
             # Başlık satırını bul (Name, Id, Version... içerir)
-            if "Name" in line and "Id" in line and "Version" in line:
+            # Winget sürümüne göre başlıklar değişebilir, bu yüzden esnek olmalı
+            lower_line = line.lower()
+            if "name" in lower_line and "id" in lower_line and "version" in lower_line:
                 header_found = True
                 # Sütunların başlangıç yerlerini tespit et
-                col_indices['Name'] = 0
+                col_indices['Name'] = line.find("Name") if "Name" in line else line.find("Ad")
                 col_indices['Id'] = line.find("Id")
-                col_indices['Version'] = line.find("Version")
-                col_indices['Available'] = line.find("Available")
-                col_indices['Source'] = line.find("Source")
+                col_indices['Version'] = line.find("Version") if "Version" in line else line.find("Sürüm")
+                col_indices['Available'] = line.find("Available") if "Available" in line else line.find("Mevcut")
+                col_indices['Source'] = line.find("Source") if "Source" in line else line.find("Kaynak")
                 continue
             
             # Ayırıcı çizgileri (------) atla
@@ -64,13 +68,20 @@ class CheckUpdatesThread(QThread):
             if header_found and line.strip():
                 try:
                     # Satırı sütunlara böl
-                    name = line[col_indices['Name']:col_indices['Id']].strip()
-                    app_id = line[col_indices['Id']:col_indices['Version']].strip()
-                    current_ver = line[col_indices['Version']:col_indices['Available']].strip()
-                    new_ver = line[col_indices['Available']:col_indices['Source']].strip()
+                    # İndekslerin geçerliliğini kontrol et
+                    name_idx = col_indices.get('Name', 0)
+                    id_idx = col_indices.get('Id', 20)
+                    ver_idx = col_indices.get('Version', 40)
+                    avail_idx = col_indices.get('Available', 60)
+                    source_idx = col_indices.get('Source', 80)
+
+                    name = line[name_idx:id_idx].strip()
+                    app_id = line[id_idx:ver_idx].strip()
+                    current_ver = line[ver_idx:avail_idx].strip()
+                    new_ver = line[avail_idx:source_idx].strip()
                     
                     # Eğer anlamlı bir veri varsa listeye ekle
-                    if name and app_id:
+                    if name and app_id and "..." not in app_id: # ... olanlar genelde kesilmiş satırlardır
                         apps.append({
                             "name": name,
                             "id": app_id,
@@ -98,25 +109,29 @@ class UpdateRunnerThread(QThread):
             self.log_signal.emit(f"[{index+1}/{total}] Güncelleniyor: {app_id}...")
             
             creationflags = 0x08000000 if sys.platform == "win32" else 0
-            cmd = ["winget", "upgrade", "--id", app_id, "--accept-source-agreements", "--accept-package-agreements"]
+            # --accept-source-agreements --accept-package-agreements: Onay istemeden kurması için
+            cmd = ["winget", "upgrade", "--id", app_id, "--accept-source-agreements", "--accept-package-agreements", "--silent"]
             
-            proc = subprocess.Popen(
-                cmd, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE, 
-                text=True, 
-                encoding='utf-8', 
-                errors='ignore',
-                creationflags=creationflags
-            )
-            
-            # Çıktıyı anlık okuyabiliriz ama basitlik için bekleyelim
-            stdout, stderr = proc.communicate()
-            
-            if proc.returncode == 0:
-                self.log_signal.emit(f"✅ {app_id} başarıyla güncellendi.")
-            else:
-                self.log_signal.emit(f"❌ {app_id} güncellenemedi.")
+            try:
+                proc = subprocess.Popen(
+                    cmd, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE, 
+                    text=True, 
+                    encoding='utf-8', 
+                    errors='ignore',
+                    creationflags=creationflags
+                )
+                
+                # Çıktıyı bekle
+                stdout, stderr = proc.communicate()
+                
+                if proc.returncode == 0:
+                    self.log_signal.emit(f"✅ {app_id} başarıyla güncellendi.")
+                else:
+                    self.log_signal.emit(f"❌ {app_id} güncellenemedi. Hata kodu: {proc.returncode}")
+            except Exception as e:
+                self.log_signal.emit(f"❌ {app_id} hata: {str(e)}")
         
         self.finished_signal.emit()
 
@@ -128,80 +143,69 @@ class UpdatesTab(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
         
-        # --- Üst Bilgi ve Buton ---
-        info_label = QLabel("Bilgisayarınızdaki güncellemeleri kontrol edin ve seçtiklerinizi güvenle yükleyin.")
-        info_label.setStyleSheet("color: #aaa; font-size: 12px; margin-bottom: 10px;")
-        layout.addWidget(info_label)
+        # Üst Bilgi
+        title = QLabel("Yazılım Güncellemeleri")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #3b82f6;")
+        desc = QLabel("Bilgisayarınızdaki güncellemeleri kontrol edin ve seçtiklerinizi güvenle yükleyin.")
+        desc.setStyleSheet("color: #94a3b8; margin-bottom: 10px;")
+        
+        layout.addWidget(title)
+        layout.addWidget(desc)
 
-        btn_layout = QHBoxLayout()
-        self.btn_check = QPushButton("Güncellemeleri Denetle")
-        self.btn_check.setFixedHeight(40)
-        self.btn_check.setStyleSheet("""
-            QPushButton {
-                background-color: #2563eb; color: white; border-radius: 5px; font-weight: bold; font-size: 14px;
-            }
-            QPushButton:hover { background-color: #1d4ed8; }
-        """)
+        # Kontrol Butonu
+        self.btn_check = QPushButton("Güncellemeleri Tara")
+        self.btn_check.setMinimumHeight(40)
         self.btn_check.clicked.connect(self.start_check_updates)
-        btn_layout.addWidget(self.btn_check)
-        layout.addLayout(btn_layout)
+        layout.addWidget(self.btn_check)
 
-        # --- Yükleniyor Göstergesi ---
+        # Progress Bar
         self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0) # Sonsuz döngü animasyonu
+        self.progress_bar.setRange(0, 0) # Sonsuz döngü (Marquee)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar { border: none; background: #334155; height: 5px; border-radius: 2px; }
+            QProgressBar::chunk { background: #3b82f6; border-radius: 2px; }
+        """)
         self.progress_bar.hide()
         layout.addWidget(self.progress_bar)
 
-        # --- Tablo ---
+        # Tablo
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["Seç", "Program Adı", "Mevcut Sürüm", "Yeni Sürüm"])
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch) # İsim kısmı uzasın
-        self.table.setColumnWidth(0, 40) # Checkbox sütunu dar olsun
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.setColumnWidth(0, 50)
         self.table.verticalHeader().setVisible(False)
-        self.table.setStyleSheet("""
-            QTableWidget {
-                background-color: #1e293b; color: #e2e8f0; gridline-color: #334155; border: none;
-            }
-            QHeaderView::section {
-                background-color: #0f172a; color: #94a3b8; padding: 5px; border: none; font-weight: bold;
-            }
-            QTableWidget::item { padding: 5px; }
-        """)
+        # Tema dosyasındaki stiller otomatik uygulanacak
         layout.addWidget(self.table)
 
-        # --- Alt Aksiyon Alanı ---
-        action_layout = QHBoxLayout()
+        # Alt Butonlar
+        action_bar = QFrame()
+        action_bar.setStyleSheet("background-color: transparent; border-top: 1px solid #334155; margin-top: 10px;")
+        action_layout = QHBoxLayout(action_bar)
+        action_layout.setContentsMargins(0, 10, 0, 0)
         
         self.lbl_status = QLabel("Hazır")
-        self.lbl_status.setStyleSheet("color: #64748b;")
+        self.lbl_status.setStyleSheet("color: #64748b; font-weight: bold;")
+        
+        self.btn_update = QPushButton("Seçilenleri Güncelle")
+        self.btn_update.setProperty("class", "success")
+        self.btn_update.setMinimumHeight(45)
+        self.btn_update.setEnabled(False)
+        self.btn_update.clicked.connect(self.start_update_process)
+        
         action_layout.addWidget(self.lbl_status)
-        
         action_layout.addStretch()
+        action_layout.addWidget(self.btn_update)
         
-        self.btn_update_selected = QPushButton("Seçilenleri Güncelle")
-        self.btn_update_selected.setEnabled(False) # Başta pasif
-        self.btn_update_selected.setFixedHeight(40)
-        self.btn_update_selected.setStyleSheet("""
-            QPushButton {
-                background-color: #16a34a; color: white; border-radius: 5px; font-weight: bold; padding: 0 20px;
-            }
-            QPushButton:hover { background-color: #15803d; }
-            QPushButton:disabled { background-color: #334155; color: #94a3b8; }
-        """)
-        self.btn_update_selected.clicked.connect(self.start_update_process)
-        action_layout.addWidget(self.btn_update_selected)
-        
-        layout.addLayout(action_layout)
+        layout.addWidget(action_bar)
         self.setLayout(layout)
 
     def start_check_updates(self):
-        """Kontrol işlemini başlatır."""
         self.table.setRowCount(0)
         self.btn_check.setEnabled(False)
-        self.btn_update_selected.setEnabled(False)
+        self.btn_update.setEnabled(False)
         self.progress_bar.show()
-        self.lbl_status.setText("Güncellemeler taranıyor (Winget)... Bu işlem biraz sürebilir.")
+        self.lbl_status.setText("Güncellemeler taranıyor... Bu işlem biraz sürebilir.")
         
         self.check_thread = CheckUpdatesThread()
         self.check_thread.updates_found.connect(self.on_updates_found)
@@ -209,7 +213,6 @@ class UpdatesTab(QWidget):
         self.check_thread.start()
 
     def on_updates_found(self, apps):
-        """Bulunan güncellemeleri tabloya ekler."""
         self.progress_bar.hide()
         self.btn_check.setEnabled(True)
         
@@ -224,8 +227,7 @@ class UpdatesTab(QWidget):
         for row, app in enumerate(apps):
             # 1. Checkbox
             chk_box = QCheckBox()
-            chk_box.setChecked(True) # Varsayılan olarak seçili gelsin
-            # Checkbox'ı ortalamak için bir widget içine koyuyoruz
+            chk_box.setChecked(True)
             cell_widget = QWidget()
             chk_layout = QHBoxLayout(cell_widget)
             chk_layout.addWidget(chk_box)
@@ -233,15 +235,15 @@ class UpdatesTab(QWidget):
             chk_layout.setContentsMargins(0,0,0,0)
             self.table.setCellWidget(row, 0, cell_widget)
             
-            # Program ID'sini checkbox'a gizli veri olarak ekleyelim ki sonra bulalım
+            # Program ID'sini checkbox'a ekle
             chk_box.setProperty("app_id", app['id'])
 
-            # 2. İsim, Mevcut, Yeni
+            # 2. Bilgiler
             self.table.setItem(row, 1, QTableWidgetItem(app['name']))
             self.table.setItem(row, 2, QTableWidgetItem(app['current']))
             self.table.setItem(row, 3, QTableWidgetItem(app['new']))
 
-        self.btn_update_selected.setEnabled(True)
+        self.btn_update.setEnabled(True)
 
     def on_error(self, message):
         self.progress_bar.hide()
@@ -250,13 +252,9 @@ class UpdatesTab(QWidget):
         QMessageBox.warning(self, "Hata", message)
 
     def start_update_process(self):
-        """Seçilenleri güncelleme işlemini başlatır."""
         selected_ids = []
-        
-        # Tabloyu gez ve seçili olanların ID'sini al
         for row in range(self.table.rowCount()):
             cell_widget = self.table.cellWidget(row, 0)
-            # Widget hiyerarşisi: Widget -> Layout -> Checkbox
             if cell_widget:
                 checkbox = cell_widget.findChild(QCheckBox)
                 if checkbox and checkbox.isChecked():
@@ -271,7 +269,7 @@ class UpdatesTab(QWidget):
         
         if confirm == QMessageBox.Yes:
             self.btn_check.setEnabled(False)
-            self.btn_update_selected.setEnabled(False)
+            self.btn_update.setEnabled(False)
             self.progress_bar.show()
             
             self.update_thread = UpdateRunnerThread(selected_ids)
@@ -284,9 +282,7 @@ class UpdatesTab(QWidget):
 
     def on_update_finished(self):
         self.progress_bar.hide()
-        self.lbl_status.setText("İşlem tamamlandı. Listeyi yenileyebilirsiniz.")
+        self.lbl_status.setText("İşlem tamamlandı.")
         self.btn_check.setEnabled(True)
         QMessageBox.information(self, "Tamamlandı", "Seçilen güncellemeler tamamlandı!")
-        # Listeyi temizle
         self.table.setRowCount(0)
-        self.btn_update_selected.setEnabled(False)

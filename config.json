@@ -1,7 +1,7 @@
 {
-    "app_name": "Saydut Program Yöneticisi",
+    "app_name": "Saydut Program Y\u00f6neticisi",
     "version": "2.0.0",
-    "theme": "system",
+    "theme": "dark",
     "language": "tr",
     "remote_version_url": "https://saydut.com/static/apps/programyonetici/version.json"
 }

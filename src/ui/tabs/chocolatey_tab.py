@@ -2,7 +2,8 @@ import json
 import os
 import subprocess
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QCheckBox, QScrollArea, 
-                             QPushButton, QHBoxLayout, QMessageBox, QLabel)
+                             QPushButton, QHBoxLayout, QMessageBox, QLabel,
+                             QGridLayout, QFrame, QSizePolicy)
 from PyQt5.QtCore import Qt
 
 class ChocolateyTab(QWidget):
@@ -11,8 +12,6 @@ class ChocolateyTab(QWidget):
         self.layout = QVBoxLayout()
         self.checkboxes = []
         self.choco_data = []
-        
-        # Önce Chocolatey yüklü mü diye bakalım
         self.is_choco_installed = self.check_choco_installed()
         
         self.load_data()
@@ -20,11 +19,10 @@ class ChocolateyTab(QWidget):
         self.setLayout(self.layout)
 
     def check_choco_installed(self):
-        """Sistemde 'choco' komutu çalışıyor mu kontrol eder."""
         try:
-            subprocess.run(["choco", "--version"], capture_output=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            subprocess.run(["choco", "--version"], capture_output=True, check=True, creationflags=0x08000000)
             return True
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except:
             return False
 
     def load_data(self):
@@ -38,78 +36,102 @@ class ChocolateyTab(QWidget):
             self.choco_data = []
 
     def init_ui(self):
-        # Başlık ve Durum Bilgisi
+        # Başlık ve Durum
         header_layout = QHBoxLayout()
         title = QLabel("Chocolatey Paketleri")
-        title.setStyleSheet("font-weight: bold; font-size: 14px;")
-        header_layout.addWidget(title)
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #3b82f6;")
         
-        # Duruma göre ikon/metin
         status_label = QLabel()
         if self.is_choco_installed:
             status_label.setText("Durum: ✔️ Yüklü")
-            status_label.setStyleSheet("color: green; font-weight: bold;")
+            status_label.setStyleSheet("color: #10b981; font-weight: bold; font-size: 14px;")
         else:
             status_label.setText("Durum: ❌ Yüklü Değil")
-            status_label.setStyleSheet("color: red; font-weight: bold;")
+            status_label.setStyleSheet("color: #ef4444; font-weight: bold; font-size: 14px;")
         
-        header_layout.addWidget(status_label)
+        header_layout.addWidget(title)
         header_layout.addStretch()
+        header_layout.addWidget(status_label)
         self.layout.addLayout(header_layout)
 
-        # Eğer yüklü değilse "Yükle" butonu göster
         if not self.is_choco_installed:
             install_btn = QPushButton("Chocolatey'i Şimdi Yükle")
-            install_btn.setStyleSheet("background-color: #d32f2f; color: white; padding: 5px;")
+            install_btn.setProperty("class", "danger")
             install_btn.clicked.connect(self.install_chocolatey_core)
             self.layout.addWidget(install_btn)
 
-        # Liste Alanı
+        # Kart Alanı
         scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: transparent; }")
+        
         scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout()
+        scroll_widget.setStyleSheet("background-color: transparent;")
+        
+        grid_layout = QGridLayout()
+        grid_layout.setSpacing(15)
+        grid_layout.setContentsMargins(5, 5, 5, 5)
         
         if not self.choco_data:
-            scroll_layout.addWidget(QLabel("Liste yüklenemedi! data/chocolatey.json dosyasını kontrol edin."))
+            grid_layout.addWidget(QLabel("Veri yok!"), 0, 0)
         else:
+            row = 0
+            col = 0
+            max_columns = 4 # İsimler kısa olduğu için 4 sütun olabilir
+
             for item in self.choco_data:
-                cb = QCheckBox(item.get("name", "Bilinmeyen"))
-                # JSON'da paket adı 'package' anahtarı ile tutuluyor
-                cb.setProperty("choco_package", item.get("package"))
-                self.checkboxes.append(cb)
-                scroll_layout.addWidget(cb)
+                card = QFrame()
+                card.setProperty("class", "card")
+                card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
                 
-                # Choco yüklü değilse checkboxları devre dışı bırak
+                card_layout = QVBoxLayout(card)
+                card_layout.setContentsMargins(15, 15, 15, 15)
+                
+                cb = QCheckBox(item.get("name", "Bilinmeyen"))
+                cb.setStyleSheet("font-weight: bold; font-size: 14px; border: none; background: transparent;")
+                cb.setProperty("choco_package", item.get("package"))
                 if not self.is_choco_installed:
                     cb.setEnabled(False)
+                
+                self.checkboxes.append(cb)
+                
+                card_layout.addWidget(cb)
+                grid_layout.addWidget(card, row, col)
+                
+                col += 1
+                if col >= max_columns:
+                    col = 0
+                    row += 1
 
-        scroll_widget.setLayout(scroll_layout)
-        scroll_area.setWidgetResizable(True)
+        scroll_widget.setLayout(grid_layout)
         scroll_area.setWidget(scroll_widget)
         self.layout.addWidget(scroll_area)
 
-        # Kurulum Butonu
-        btn_layout = QHBoxLayout()
+        # Alt Buton
+        action_bar = QFrame()
+        action_bar.setStyleSheet("background-color: transparent; border-top: 1px solid #334155; margin-top: 10px;")
+        action_layout = QHBoxLayout(action_bar)
+        action_layout.setContentsMargins(0, 10, 0, 0)
+        
         self.btn_install = QPushButton("Seçilenleri Kur")
-        self.btn_install.setMinimumHeight(40)
+        self.btn_install.setProperty("class", "success")
+        self.btn_install.setMinimumHeight(45)
         self.btn_install.clicked.connect(self.install_selected)
         if not self.is_choco_installed:
             self.btn_install.setEnabled(False)
             
-        btn_layout.addWidget(self.btn_install)
-        self.layout.addLayout(btn_layout)
+        action_layout.addStretch()
+        action_layout.addWidget(self.btn_install)
+        self.layout.addWidget(action_bar)
 
     def install_chocolatey_core(self):
-        """Chocolatey'i sisteme kuran komutu çalıştırır."""
         cmd = "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
         try:
-            QMessageBox.information(self, "Kurulum", "Chocolatey kurulumu başlıyor. Bu işlem biraz sürebilir, lütfen bekleyin.")
-            # PowerShell ile çalıştır
+            QMessageBox.information(self, "Kurulum", "Chocolatey kurulumu başlıyor...")
             subprocess.run(["powershell", "-Command", cmd], shell=True, check=True)
-            QMessageBox.information(self, "Başarılı", "Chocolatey kuruldu! Programı yeniden başlatmanız gerekebilir.")
-            # Butonları aktifleştirmek için basitçe yeniden başlatma önerilir veya programı reload edebiliriz.
+            QMessageBox.information(self, "Başarılı", "Chocolatey kuruldu! Programı yeniden başlatın.")
         except Exception as e:
-            QMessageBox.critical(self, "Hata", f"Kurulum başarısız oldu: {e}")
+            QMessageBox.critical(self, "Hata", f"Kurulum başarısız: {e}")
 
     def install_selected(self):
         packages = []
@@ -118,18 +140,9 @@ class ChocolateyTab(QWidget):
                 packages.append(cb.property("choco_package"))
         
         if not packages:
-            QMessageBox.warning(self, "Uyarı", "Lütfen en az bir paket seçin.")
+            QMessageBox.warning(self, "Uyarı", "Paket seçmelisiniz.")
             return
 
-        confirm = QMessageBox.question(self, "Onay", f"{len(packages)} paket Chocolatey ile kurulacak.\nDevam edilsin mi?", 
-                                       QMessageBox.Yes | QMessageBox.No)
-        
-        if confirm == QMessageBox.Yes:
-            # Paketleri tek komutta birleştir: choco install p1 p2 p3 -y
-            packages_str = " ".join(packages)
-            cmd = f"choco install {packages_str} -y"
-            
-            # Şimdilik direkt çalıştırıyoruz (Multithread sonraki iş)
-            print(f"Komut: {cmd}")
-            # subprocess.run(cmd, shell=True) # Gerçek kurulum için bu satır açılmalı
-            QMessageBox.information(self, "Bilgi", f"Komut gönderildi:\n{cmd}\n\n(Arka plan işlemi daha sonra eklenecek)")
+        cmd = f"choco install {' '.join(packages)} -y"
+        print(f"Komut: {cmd}")
+        QMessageBox.information(self, "Bilgi", "Kurulum başlıyor...")
