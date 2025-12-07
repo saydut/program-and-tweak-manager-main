@@ -7,7 +7,7 @@ PROGRAM_YONETICISI_DATA = {
     "name": "Program Yöneticisi",
     "description": "Format sonrası bilgisayarını tek tıkla kur. Programları yükle, güncelle ve sistem ayarlarını otomatik yap.",
     "version": "v2.0",
-    # İndirme linki artık Netlify üzerinden
+    # İndirme linki
     "download_url": "https://saydut.netlify.app/ProgramYonetici.exe",
     "page_title": "Program Yöneticisi - İncele ve İndir"
 }
@@ -17,7 +17,15 @@ PROGRAM_YONETICISI_DATA = {
 def home():
     return render_template('index.html')
 
-# 2. Program Detay Sayfası
+# 2. Program Yöneticisi Detay Sayfası
 @app.route('/apps/program-yoneticisi/')
 def program_yoneticisi_detail():
     return render_template('program_detail.html', program=PROGRAM_YONETICISI_DATA)
+
+# 3. Dosya Ayırıcı Detay Sayfası (YENİ EKLENDİ)
+@app.route('/apps/dosya-ayirici/')
+def dosya_ayirici():
+    return render_template('dosya_ayirici.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
