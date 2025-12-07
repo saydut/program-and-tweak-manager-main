@@ -3,87 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saydut Yazılım - Ana Sayfa</title>
+    <title>Saydut Yazılım | Modern Çözümler</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        slate: { 850: '#151e2e' }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { transform: translateY(-10px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        /* Modern Grid Arka Planı */
+        body {
+            background-color: #0f172a;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        /* Glassmorphism Efekti */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="text-slate-300 font-sans min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
 
-    <!-- Navbar -->
-    <nav class="p-6 flex justify-between items-center max-w-7xl mx-auto w-full border-b border-gray-800">
-        <div class="text-2xl font-bold text-blue-500">saydut<span class="text-white">.com</span></div>
-        <div class="space-x-6">
-            <a href="#" class="text-white font-medium hover:text-blue-400 transition">Projeler</a>
-            <a href="#" class="text-gray-400 hover:text-white transition">Hakkımda</a>
-            <a href="#" class="text-gray-400 hover:text-white transition">İletişim</a>
+    <!-- Navbar (Sticky ve Glass efektli) -->
+    <nav class="fixed w-full z-50 top-0 transition-all duration-300 glass border-b border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 bg-gradient-to-tr from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:shadow-blue-500/50 transition">
+                    S
+                </div>
+                <span class="text-xl font-bold text-white tracking-tight">saydut<span class="text-blue-500">.yazılım</span></span>
+            </a>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Projeler</a>
+                <a href="#" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Hakkımda</a>
+                <a href="#" class="px-4 py-2 text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all">
+                    İletişim
+                </a>
+            </div>
+
+            <!-- Mobil Menü Butonu -->
+            <button class="md:hidden text-2xl text-white">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
 
     <!-- Hero Alanı -->
-    <header class="container mx-auto px-6 py-20 text-center">
-        <h1 class="text-5xl md:text-6xl font-bold mb-6 text-white">
-            Hayatı Kolaylaştıran <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Yazılımlar</span>
-        </h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
-            Windows araçlarından web çözümlerine kadar geliştirdiğim tüm projeler burada. İhtiyacın olanı seç ve hemen kullanmaya başla.
-        </p>
+    <header class="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden">
+        <!-- Arka plan parlama efekti -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto text-center animate-fade-in">
+            <div class="inline-block mb-4 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium">
+                🚀 Yeni Sürüm v2.0 Yayında
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold text-white tracking-tight mb-8 leading-tight">
+                Hayatı Kolaylaştıran <br />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 glow-text">Dijital Çözümler</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Windows araçlarından web çözümlerine kadar, günlük iş akışınızı hızlandıracak minimalist ve güçlü yazılımlar geliştiriyorum.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#projects" class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold transition-all hover:scale-105 shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+                    Projeleri Keşfet <i class="fas fa-arrow-down animate-bounce"></i>
+                </a>
+                <a href="#" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-semibold transition-all border border-slate-700 flex items-center justify-center gap-2">
+                    <i class="fab fa-github"></i> GitHub Profilim
+                </a>
+            </div>
+        </div>
     </header>
 
-    <!-- Projeler Grid -->
-    <main class="container mx-auto px-6 pb-20">
+    <!-- Projeler Bölümü -->
+    <main id="projects" class="container mx-auto px-6 pb-32">
+        <div class="flex items-center gap-4 mb-12">
+            <h2 class="text-3xl font-bold text-white">Öne Çıkan Projeler</h2>
+            <div class="h-px flex-grow bg-gradient-to-r from-slate-700 to-transparent"></div>
+        </div>
+
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             
             <!-- PROJE 1: Program Yöneticisi -->
-            <div class="card-hover bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 flex flex-col">
-                <div class="h-48 bg-gradient-to-br from-blue-900 to-gray-900 flex items-center justify-center">
-                    <i class="fas fa-tasks text-6xl text-blue-400"></i>
-                </div>
-                <div class="p-6 flex-grow flex flex-col">
-                    <h3 class="text-2xl font-bold mb-2 text-white">Program Yöneticisi</h3>
-                    <p class="text-gray-400 mb-6 flex-grow">
-                        Format sonrası bilgisayarını tek tıkla kur. Programları yükle, güncelle ve sistem ayarlarını otomatik yap.
-                    </p>
-                    <div class="flex justify-between items-center mt-auto">
-                        <span class="text-xs font-mono bg-gray-700 px-2 py-1 rounded text-gray-300">v2.0</span>
-                        <!-- TIKLAYINCA GİDECEĞİ ADRES -->
-                        <a href="/apps/program-yoneticisi/" class="text-blue-400 hover:text-white font-semibold transition flex items-center gap-2">
-                            İncele ve İndir <i class="fas fa-arrow-right"></i>
+            <div class="group relative glass rounded-2xl p-1 hover:bg-slate-800/80 transition-all duration-300 hover:-translate-y-2">
+                <!-- Border Gradient Efekti -->
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur duration-500 -z-10"></div>
+                
+                <div class="bg-slate-900/90 h-full rounded-xl overflow-hidden flex flex-col relative z-10">
+                    <div class="h-52 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                        <!-- Dekoratif Daireler -->
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+                        <i class="fas fa-layer-group text-7xl text-slate-700 group-hover:text-blue-400 transition-colors duration-300 animate-float"></i>
+                    </div>
+                    
+                    <div class="p-8 flex-grow flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">Program Yöneticisi</h3>
+                            <span class="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-mono rounded border border-green-500/20">v2.0</span>
+                        </div>
+                        
+                        <p class="text-slate-400 mb-6 leading-relaxed flex-grow">
+                            Format sonrası bilgisayar kurulumunu otomatiğe bağlayın. Tek tıkla program kurulumu ve sistem optimizasyonu.
+                        </p>
+                        
+                        <div class="flex items-center gap-3 text-sm text-slate-500 mb-6">
+                            <span class="flex items-center gap-1"><i class="fab fa-windows"></i> Win 10/11</span>
+                            <span>&bull;</span>
+                            <span class="flex items-center gap-1"><i class="fas fa-code"></i> Open Source</span>
+                        </div>
+
+                        <a href="program_detail.html" class="w-full py-3 rounded-lg bg-slate-800 hover:bg-blue-600 text-white font-medium transition-all text-center border border-slate-700 hover:border-blue-500 group-hover:shadow-lg group-hover:shadow-blue-500/20">
+                            İncele ve İndir
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- PROJE 2: Gelecekteki Projen (Örnek) -->
-            <div class="card-hover bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 opacity-60 flex flex-col">
-                <div class="h-48 bg-gray-900 flex items-center justify-center">
-                    <i class="fas fa-code text-6xl text-gray-600"></i>
+            <!-- PROJE 2: Gelecekteki Proje (Placeholder) -->
+            <div class="glass rounded-2xl border border-dashed border-slate-700 p-8 flex flex-col items-center justify-center text-center opacity-75 hover:opacity-100 transition-opacity">
+                <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4 text-slate-500">
+                    <i class="fas fa-rocket text-2xl"></i>
                 </div>
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold mb-2 text-white">Yakında...</h3>
-                    <p class="text-gray-400 mb-6">
-                        Yeni projeler üzerinde çalışıyorum. Takipte kalın!
-                    </p>
-                    <button disabled class="text-gray-500 cursor-not-allowed font-semibold">
-                        Hazırlanıyor
-                    </button>
-                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Sırada Ne Var?</h3>
+                <p class="text-slate-400 text-sm mb-6">
+                    Yeni web araçları ve otomasyon botları üzerinde çalışıyorum. Haberdar olmak için takipte kalın.
+                </p>
+                <button class="px-4 py-2 rounded-full bg-slate-800 text-slate-500 text-sm font-medium cursor-not-allowed border border-slate-700">
+                    Geliştirme Aşamasında
+                </button>
             </div>
 
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-800 py-8 text-center text-gray-500">
-        &copy; 2025 Saydut Yazılım. 
-        <div class="mt-2 space-x-4 text-xl">
-            <a href="#" class="hover:text-blue-500"><i class="fab fa-github"></i></a>
-            <a href="#" class="hover:text-blue-400"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="hover:text-pink-500"><i class="fab fa-instagram"></i></a>
+    <!-- Modern Footer -->
+    <footer class="border-t border-slate-800 bg-slate-900/50 pt-16 pb-8 mt-auto">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mb-8">
+                <span class="text-2xl font-bold text-white tracking-tight">saydut<span class="text-blue-500">.yazılım</span></span>
+            </div>
+            <div class="flex justify-center gap-8 mb-12">
+                <a href="#" class="text-slate-400 hover:text-white hover:scale-110 transition-all"><i class="fab fa-github text-2xl"></i></a>
+                <a href="#" class="text-slate-400 hover:text-blue-400 hover:scale-110 transition-all"><i class="fab fa-twitter text-2xl"></i></a>
+                <a href="#" class="text-slate-400 hover:text-pink-500 hover:scale-110 transition-all"><i class="fab fa-instagram text-2xl"></i></a>
+                <a href="#" class="text-slate-400 hover:text-blue-600 hover:scale-110 transition-all"><i class="fab fa-linkedin text-2xl"></i></a>
+            </div>
+            <p class="text-slate-600 text-sm">
+                &copy; 2025 Saydut Yazılım. Tüm hakları saklıdır. <br />
+                <span class="text-slate-700">Designed with ❤️ for developers.</span>
+            </p>
         </div>
     </footer>
 

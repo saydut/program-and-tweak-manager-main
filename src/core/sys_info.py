@@ -1,6 +1,10 @@
 import psutil
 import platform
 import socket
+import subprocess
+import os
+
+# PyOpenCL opsiyonel olarak kalsın, varsa kullanırız
 try:
     import pyopencl as cl
     HAS_OPENCL = True
@@ -36,7 +40,7 @@ class SystemInfo:
         lines = ["=== İŞLEMCİ (CPU) ==="]
         lines.append(f"İşlemci Modeli: {platform.processor()}")
         lines.append(f"Fiziksel Çekirdek: {psutil.cpu_count(logical=False)}")
-        lines.append(f"Mantıksal İş Parçacığı (Thread): {psutil.cpu_count(logical=True)}")
+        lines.append(f"Mantıksal İş Parçacığı: {psutil.cpu_count(logical=True)}")
         try:
             freq = psutil.cpu_freq()
             if freq:
@@ -55,8 +59,8 @@ class SystemInfo:
     def get_disk_info(self):
         lines = ["=== DEPOLAMA (C: Sürücüsü) ==="]
         try:
-            # Genellikle C: veya root dizinine bakılır
-            disk = psutil.disk_usage('/')
+            # Windows'ta genelde C: ana disktir
+            disk = psutil.disk_usage('C:\\')
             total = round(disk.total / (1024**3), 2)
             used = round(disk.used / (1024**3), 2)
             free = round(disk.free / (1024**3), 2)
@@ -64,7 +68,7 @@ class SystemInfo:
             lines.append(f"Kullanılan: {used} GB")
             lines.append(f"Boş Alan: {free} GB")
         except:
-            lines.append("Disk bilgisi alınamadı.")
+            lines.append("C: Sürücüsü bilgisi alınamadı.")
         return "\n".join(lines)
     
     def get_network_info(self):
@@ -78,25 +82,39 @@ class SystemInfo:
         return "\n".join(lines)
 
     def get_gpu_info(self):
+        """
+        Ekran kartı bilgisini almak için önce WMIC (Windows),
+        yoksa PyOpenCL dener.
+        """
         lines = ["=== EKRAN KARTI (GPU) ==="]
-        if not HAS_OPENCL:
-            lines.append("PyOpenCL kütüphanesi bulunamadı veya GPU sürücüsü eksik.")
-            return "\n".join(lines)
-            
-        try:
-            platforms = cl.get_platforms()
-            if not platforms:
-                lines.append("OpenCL platformu bulunamadı.")
-                return "\n".join(lines)
+        
+        # Yöntem 1: WMIC (En hafif ve garanti yöntem - Windows için)
+        if os.name == 'nt':
+            try:
+                creationflags = 0x08000000 # Pencere gizleme
+                cmd = "wmic path win32_videocontroller get name"
+                result = subprocess.run(cmd, capture_output=True, text=True, shell=True, creationflags=creationflags)
+                gpus = [line.strip() for line in result.stdout.split('\n') if line.strip() and "Name" not in line]
+                
+                if gpus:
+                    for i, gpu in enumerate(gpus):
+                        lines.append(f"GPU {i+1}: {gpu}")
+                    return "\n".join(lines)
+            except:
+                pass # Hata olursa diğer yönteme geç
 
-            for p in platforms:
-                devices = p.get_devices(device_type=cl.device_type.GPU)
-                for d in devices:
-                    lines.append(f"Model: {d.name}")
-                    mem_size = d.global_mem_size // (1024**2)
-                    lines.append(f"  Bellek: {mem_size} MB")
-                    lines.append(f"  Sürücü: {d.driver_version}")
-        except Exception as e:
-            lines.append(f"GPU bilgisi alınırken hata oluştu: {e}")
+        # Yöntem 2: PyOpenCL (Varsa)
+        if HAS_OPENCL:
+            try:
+                platforms = cl.get_platforms()
+                for p in platforms:
+                    devices = p.get_devices(device_type=cl.device_type.GPU)
+                    for d in devices:
+                        lines.append(f"Model (OpenCL): {d.name}")
+                        lines.append(f"  Sürücü: {d.driver_version}")
+                return "\n".join(lines)
+            except:
+                pass
             
+        lines.append("Ekran kartı bilgisi alınamadı.")
         return "\n".join(lines)

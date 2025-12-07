@@ -39,7 +39,7 @@ QTabWidget::tab-bar {
     left: 5px; /* İlk sekme için sol boşluk */
 }
 
-/* SEKME TASARIMI (Burayı Genişlettik) */
+/* SEKME TASARIMI */
 QTabBar::tab {
     background: #0f172a;
     color: #94a3b8;
@@ -133,21 +133,34 @@ QLineEdit:focus, QTextEdit:focus {
     border: 1px solid #3b82f6;
 }
 
-/* Checkbox */
+/* Checkbox (Özel Tik İşaretli) */
 QCheckBox {
     spacing: 8px;
     color: #e2e8f0;
+    font-size: 14px;
 }
+
 QCheckBox::indicator {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
-    border: 1px solid #475569;
+    border: 2px solid #475569;
     background: #0f172a;
 }
+
+QCheckBox::indicator:hover {
+    border-color: #3b82f6;
+}
+
 QCheckBox::indicator:checked {
     background-color: #3b82f6;
     border-color: #3b82f6;
+    /* Beyaz SVG Tik İkonu */
+    image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'></polyline></svg>");
+}
+
+QCheckBox::indicator:unchecked:hover {
+    background-color: #1e293b;
 }
 
 /* Tablolar */
@@ -336,21 +349,30 @@ QLineEdit:focus, QTextEdit:focus {
     border: 1px solid #2563eb;
 }
 
-/* Checkbox */
+/* Checkbox (Tikli) */
 QCheckBox {
     spacing: 8px;
     color: #1e293b;
+    font-size: 14px;
 }
+
 QCheckBox::indicator {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
-    border: 1px solid #cbd5e1;
+    border: 2px solid #cbd5e1;
     background: #ffffff;
 }
+
+QCheckBox::indicator:hover {
+    border-color: #2563eb;
+}
+
 QCheckBox::indicator:checked {
     background-color: #2563eb;
     border-color: #2563eb;
+    /* Beyaz SVG Tik */
+    image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'></polyline></svg>");
 }
 
 /* Tablolar */

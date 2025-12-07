@@ -3,73 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ program.page_title }}</title>
+    <!-- Dinamik başlık için buraya {{ program.page_title }} gelecek -->
+    <title>Program Yöneticisi - Detay | Saydut Yazılım</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { slate: { 850: '#151e2e' } }
+                }
+            }
+        }
+    </script>
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background-color: #0f172a;
+            background-image: radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 400px);
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .feature-icon {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="text-slate-300 font-sans min-h-screen flex flex-col">
 
-    <nav class="p-6 flex justify-between items-center max-w-7xl mx-auto w-full border-b border-gray-800">
-        <div class="text-2xl font-bold text-blue-500">saydut<span class="text-white">.com</span></div>
-        <div class="space-x-6">
-            <a href="/" class="text-white font-medium hover:text-blue-400 transition">Ana Sayfa</a>
-            <a href="#" class="text-gray-400 hover:text-white transition">Hakkımda</a>
-            <a href="#" class="text-gray-400 hover:text-white transition">İletişim</a>
+    <!-- Basitleştirilmiş Navbar -->
+    <nav class="w-full border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-xl font-bold text-white">saydut<span class="text-blue-500">.yazılım</span></a>
+            <a href="index.html" class="text-sm font-medium text-slate-400 hover:text-white transition flex items-center gap-2">
+                <i class="fas fa-arrow-left"></i> Ana Sayfaya Dön
+            </a>
         </div>
     </nav>
 
-    <main class="container mx-auto px-6 py-16 flex-grow">
-        <div class="max-w-4xl mx-auto">
+    <main class="flex-grow container mx-auto px-6 py-12">
+        
+        <!-- Üst Bölüm: Başlık ve İndirme -->
+        <div class="grid lg:grid-cols-12 gap-12 items-start mb-20">
             
-            <a href="/" class="text-blue-400 hover:text-white transition mb-8 inline-flex items-center gap-2">
-                <i class="fas fa-arrow-left"></i> Tüm Projelere Geri Dön
-            </a>
-
-            <div class="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700">
-                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-white">{{ program.name }}</h1>
-                
-                <p class="text-xl text-gray-400 mb-6">
-                    {{ program.description }}
-                </p>
-
-                <div class="flex items-center space-x-4 mb-8">
-                    <span class="text-sm font-mono bg-blue-500 px-3 py-1 rounded text-white font-bold">Versiyon: {{ program.version }}</span>
-                    <span class="text-sm font-mono bg-gray-700 px-3 py-1 rounded text-gray-300">Windows Uyumlu</span>
+            <!-- Sol Kolon: Bilgiler -->
+            <div class="lg:col-span-7 space-y-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider border border-blue-500/20">
+                            Windows Utility
+                        </span>
+                        <!-- Versiyon Dinamik: {{ program.version }} -->
+                        <span class="text-slate-500 text-sm font-mono">v2.1.0</span>
+                    </div>
+                    
+                    <!-- İsim Dinamik: {{ program.name }} -->
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6">
+                        Program Yöneticisi
+                    </h1>
+                    
+                    <!-- Açıklama Dinamik: {{ program.description }} -->
+                    <p class="text-lg text-slate-400 leading-relaxed">
+                        Format sonrası bilgisayarını tek tıkla kur. Programları yükle, güncelle ve sistem ayarlarını otomatik yap. Karmaşık kurulum süreçlerini unutun, zamandan tasarruf edin.
+                    </p>
                 </div>
-                
-                <a href="{{ program.download_url }}" download class="inline-flex items-center justify-center 
-                                                                    bg-green-500 hover:bg-green-600 text-white font-bold 
-                                                                    py-3 px-8 rounded-lg transition duration-300 ease-in-out 
-                                                                    shadow-lg hover:shadow-xl text-lg">
-                    <i class="fas fa-download mr-3"></i> {{ program.name }} İndir
-                </a>
-                
-                <p class="mt-4 text-sm text-gray-500">Programın boyutu, sistem gereksinimleri vb. bilgileri buraya ekleyebilirsin.</p>
-                
-                <div class="mt-10 pt-6 border-t border-gray-700">
-                    <h2 class="text-3xl font-bold mb-4 text-white">Özellikler</h2>
-                    <ul class="list-disc list-inside space-y-2 text-gray-400 ml-4">
-                        <li>Tek tıkla program yükleme/kaldırma ve güncelleme.</li>
-                        <li>Format sonrası sistem ayarlarını otomatik yapılandırma (tweakler).</li>
-                        <li>Sistem bilgisi görüntüleme.</li>
-                        <li>Açık kaynak kodlu ve sade arayüz.</li>
-                    </ul>
+
+                <div class="flex flex-wrap gap-4">
+                    <!-- İndirme Linki Dinamik: {{ program.download_url }} -->
+                    <a href="#" class="px-8 py-4 bg-white text-slate-900 rounded-xl font-bold hover:bg-blue-50 transition-all transform hover:scale-105 shadow-xl shadow-white/5 flex items-center gap-3">
+                        <i class="fas fa-download text-blue-600"></i> Hemen İndir
+                        <span class="text-xs font-normal text-slate-500 ml-1">(64-bit)</span>
+                    </a>
+                    <a href="#" class="px-8 py-4 glass-panel text-white rounded-xl font-semibold hover:bg-slate-800 transition-all border border-slate-700">
+                        GitHub Kaynağı
+                    </a>
                 </div>
-                
+
+                <!-- Küçük Sistem Bilgisi -->
+                <div class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-800/50">
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase font-bold mb-1">Boyut</div>
+                        <div class="text-white">12.5 MB</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase font-bold mb-1">Lisans</div>
+                        <div class="text-white">MIT (Ücretsiz)</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase font-bold mb-1">Güncelleme</div>
+                        <div class="text-white">03.12.2025</div>
+                    </div>
+                </div>
             </div>
-            
+
+            <!-- Sağ Kolon: Görsel / Screenshot -->
+            <div class="lg:col-span-5">
+                <div class="relative group">
+                    <!-- Glow Efekti -->
+                    <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                    
+                    <!-- Screenshot Placeholder -->
+                    <div class="relative glass-panel rounded-xl aspect-video flex items-center justify-center overflow-hidden border border-slate-700">
+                        <!-- Buraya gerçek bir ekran görüntüsü (img tag) koyabilirsin -->
+                        <div class="text-center p-8">
+                            <i class="fas fa-desktop text-6xl text-slate-700 mb-4 block group-hover:text-blue-500 transition-colors"></i>
+                            <span class="text-slate-500 text-sm">Uygulama Ekran Görüntüsü</span>
+                        </div>
+                        
+                        <!-- Overlay Dekorasyon -->
+                        <div class="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Özellikler Grid -->
+        <div class="max-w-5xl mx-auto mt-20">
+            <h2 class="text-3xl font-bold text-white mb-10 text-center">Neden Kullanmalısın?</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Özellik 1 -->
+                <div class="glass-panel p-6 rounded-xl hover:bg-slate-800/50 transition duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
+                        <i class="fas fa-bolt text-xl text-blue-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Hızlı Kurulum</h3>
+                    <p class="text-slate-400">Tek tek web sitelerini gezmeye son. Seçtiğiniz programları toplu halde, arka planda sessizce kurar.</p>
+                </div>
+
+                <!-- Özellik 2 -->
+                <div class="glass-panel p-6 rounded-xl hover:bg-slate-800/50 transition duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
+                        <i class="fas fa-tools text-xl text-purple-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Sistem Tweakleri</h3>
+                    <p class="text-slate-400">Gereksiz Windows hizmetlerini kapatır, gizlilik ayarlarını optimize eder ve performansı artırır.</p>
+                </div>
+
+                <!-- Özellik 3 -->
+                <div class="glass-panel p-6 rounded-xl hover:bg-slate-800/50 transition duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mb-4">
+                        <i class="fas fa-shield-alt text-xl text-green-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Güvenli & Açık Kaynak</h3>
+                    <p class="text-slate-400">Kodlar tamamen şeffaftır. GitHub üzerinden incelenebilir, reklam veya zararlı yazılım içermez.</p>
+                </div>
+
+                <!-- Özellik 4 -->
+                <div class="glass-panel p-6 rounded-xl hover:bg-slate-800/50 transition duration-300">
+                    <div class="w-12 h-12 rounded-lg bg-pink-500/10 flex items-center justify-center mb-4">
+                        <i class="fas fa-sync text-xl text-pink-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Otomatik Güncelleme</h3>
+                    <p class="text-slate-400">Programların yeni sürümleri çıktığında sizi uyarır ve tek tıkla güncelleme imkanı sunar.</p>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <footer class="border-t border-gray-800 py-8 text-center text-gray-500 mt-auto">
-        &copy; 2025 Saydut Yazılım. 
-        <div class="mt-2 space-x-4 text-xl">
-            <a href="#" class="hover:text-blue-500"><i class="fab fa-github"></i></a>
-            <a href="#" class="hover:text-blue-400"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="hover:text-pink-500"><i class="fab fa-instagram"></i></a>
+    <footer class="border-t border-slate-800 py-8 text-center bg-slate-900">
+        <div class="text-slate-500 text-sm">
+            &copy; 2025 Saydut Yazılım. <a href="#" class="text-blue-500 hover:underline">Gizlilik Politikası</a>
         </div>
     </footer>
 

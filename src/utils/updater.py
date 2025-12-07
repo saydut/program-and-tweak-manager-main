@@ -16,100 +16,132 @@ class Updater:
         """Sunucudaki version.json dosyasını kontrol eder."""
         try:
             print(f"Güncelleme kontrol ediliyor: {self.remote_json_url}")
-            
-            # Cache önlemek için timestamp ekliyoruz
             url_with_timestamp = f"{self.remote_json_url}?t={int(time.time())}"
-            
-            # Tarayıcı gibi görünmek için User-Agent ekliyoruz
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             
             response = requests.get(url_with_timestamp, headers=headers, timeout=10)
-            
-            # 404 veya 500 hatası varsa exception fırlatır
             response.raise_for_status()
             
             data = response.json()
-            
             self.new_version = data.get("version")
             self.download_url = data.get("download_url")
             self.release_notes = data.get("changelog", "Yenilik notu bulunamadı.")
             
-            print(f"Sunucu versiyonu: {self.new_version}, Mevcut: {self.current_version}")
-
-            # Versiyon karşılaştırması
             if self.new_version and self.new_version != self.current_version:
                 return True, self.new_version, self.release_notes
             else:
                 return False, self.current_version, "Program güncel."
-                
-        except requests.exceptions.HTTPError as e:
-            return False, None, f"HTTP Hatası: {e}"
-        except requests.exceptions.ConnectionError:
-            return False, None, "İnternet bağlantısı yok veya sunucuya ulaşılamıyor."
         except Exception as e:
-            return False, None, f"Beklenmeyen hata: {str(e)}"
+            return False, None, f"Hata: {str(e)}"
 
     def download_and_install(self):
-        """Yeni sürümü indirir ve güvenli geçişi başlatır."""
-        
-        # Script modunda (geliştirme) güncellemeyi engelle
+        """
+        Güncelleme işlemini başlatır.
+        Program kapanır ve görünür bir CMD penceresi (BAT dosyası) işlemleri devralır.
+        """
         if not getattr(sys, 'frozen', False):
-            print("GÜVENLİK UYARISI: Script modunda güncelleme engellendi.")
-            return False, "Geliştirme ortamında (IDE) güncelleme yapılamaz. Lütfen EXE dosyasını kullanın."
+            return False, "Geliştirme ortamında (IDE) güncelleme yapılamaz."
 
         if not self.download_url:
             return False, "İndirme linki bulunamadı."
 
         try:
-            current_exe_path = os.path.abspath(sys.argv[0])
-            current_dir = os.path.dirname(current_exe_path)
+            current_exe = os.path.abspath(sys.argv[0])
+            current_dir = os.path.dirname(current_exe)
             temp_filename = "Update_New.exe"
-            download_path = os.path.join(current_dir, temp_filename)
+            new_exe_path = os.path.join(current_dir, temp_filename)
             
-            # Dosyayı indir
-            print(f"İndiriliyor: {self.download_url}")
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            response = requests.get(self.download_url, headers=headers, stream=True)
-            response.raise_for_status()
+            # Görünür BAT dosyasını oluştur ve çalıştır
+            self._create_and_run_visible_updater(current_exe, new_exe_path, self.download_url)
             
-            with open(download_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            
-            if os.path.getsize(download_path) < 1024:
-                return False, "İndirilen dosya hatalı veya çok küçük."
-
-            print("İndirme tamamlandı. Geçiş yapılıyor...")
-            self._create_and_run_safe_bat(current_exe_path, download_path)
-            
-            return True, "Güncelleme başlatılıyor..."
+            return True, "Güncelleme penceresi açılıyor..."
 
         except Exception as e:
-            print(f"İndirme/Kurulum hatası: {e}")
             return False, str(e)
 
-    def _create_and_run_safe_bat(self, current_exe, new_exe):
+    def _create_and_run_visible_updater(self, current_exe, new_exe_path, url):
+        """
+        Kullanıcının görebileceği (konsol açık) bir güncelleme scripti oluşturur.
+        """
         current_dir = os.path.dirname(current_exe)
-        exe_name = os.path.basename(current_exe)
-        backup_name = exe_name + ".old"
-        new_exe_name = os.path.basename(new_exe)
-        batch_script_path = os.path.join(current_dir, "update_installer.bat")
-
+        batch_script_path = os.path.join(current_dir, "update_visible.bat")
+        
+        # Windows CMD Scripti (Görünür Mod)
+        # curl ile indir, sil, taşı, başlat.
+        
         script_content = f"""
 @echo off
-timeout /t 3 /nobreak > NUL
-if exist "{backup_name}" del "{backup_name}"
-move "{exe_name}" "{backup_name}"
-move "{new_exe_name}" "{exe_name}"
-start "" "{exe_name}"
-del "%~f0"
-"""
-        with open(batch_script_path, "w") as bat_file:
-            bat_file.write(script_content)
+title Saydut Program Yoneticisi Guncelleme
+color 1F
+mode con: cols=80 lines=25
+cls
 
-        subprocess.Popen([batch_script_path], shell=True)
-        sys.exit()
+echo ========================================================
+echo      SAYDUT PROGRAM YONETICISI - GUNCELLEME
+echo ========================================================
+echo.
+echo  Lutfen bekleyin, program kapatiliyor...
+timeout /t 3 /nobreak > NUL
+
+echo.
+echo  Yeni surum sunucudan indiriliyor...
+echo  Link: {url}
+echo.
+
+:: Curl ile indirme (İlerleme çubuğu görünür)
+curl -L -o "{new_exe_path}" "{url}"
+
+if errorlevel 1 (
+    color 4F
+    cls
+    echo ========================================================
+    echo      HATA: INDIRME BASARISIZ OLDU!
+    echo ========================================================
+    echo.
+    echo  Sunucuya erisilemedi veya dosya bulunamadi.
+    echo  Lutfen internet baglantinizi kontrol edin.
+    echo.
+    echo  Eski surumunuz guvende. Cikmak icin bir tusa basin.
+    pause >nul
+    del "%~f0"
+    exit
+)
+
+if not exist "{new_exe_path}" (
+    color 4F
+    echo HATA: Dosya yazilamadi!
+    pause
+    del "%~f0"
+    exit
+)
+
+echo.
+echo  Eski surum kaldiriliyor...
+if exist "{current_exe}" del /f /q "{current_exe}"
+
+echo.
+echo  Yeni surum yukleniyor...
+move /y "{new_exe_path}" "{current_exe}"
+
+echo.
+echo  Guncelleme tamamlandi! Program baslatiliyor...
+timeout /t 2 /nobreak > NUL
+start "" "{current_exe}"
+
+:: Script kendini temizler
+(goto) 2>nul & del "%~f0"
+"""
+        try:
+            with open(batch_script_path, "w") as bat_file:
+                bat_file.write(script_content)
+
+            # BAT dosyasını GÖRÜNÜR şekilde yeni pencerede çalıştır
+            # CREATE_NEW_CONSOLE bayrağı, yeni ve bağımsız bir CMD penceresi açar.
+            creationflags = subprocess.CREATE_NEW_CONSOLE
+            subprocess.Popen([batch_script_path], shell=True, creationflags=creationflags)
+            
+            # Programı anında kapat
+            sys.exit(0)
+            
+        except Exception as e:
+            print(f"Script oluşturma hatası: {e}")
