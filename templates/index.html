@@ -78,15 +78,15 @@
             </p>
         </div>
 
-        <!-- Programs Grid -->
-        <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <!-- Programs Grid (GÜNCELLENDİ: 3 Kolonlu Yapı) -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             
             <!-- Card 1: Program Yöneticisi -->
             <div class="glass-panel p-8 rounded-2xl border border-slate-700/50 hover:border-blue-500/50 transition duration-300 group hover:-translate-y-2">
                 <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
                     <i class="fas fa-rocket text-2xl text-blue-400"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-3">Program ve Tweak Yöneticisi</h2>
+                <h2 class="text-2xl font-bold text-white mb-3">Program Yöneticisi</h2>
                 <p class="text-slate-400 mb-6 h-20">
                     Format sonrası ihtiyacınız olan her şey tek pakette. Programları otomatik kurun, Windows ayarlarını optimize edin.
                 </p>
@@ -99,12 +99,12 @@
                 </a>
             </div>
 
-            <!-- Card 2: Dosya Ayırıcı (GÜNCELLENDİ) -->
+            <!-- Card 2: Dosya Ayırıcı -->
             <div class="glass-panel p-8 rounded-2xl border border-slate-700/50 hover:border-purple-500/50 transition duration-300 group hover:-translate-y-2">
                 <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
                     <i class="fas fa-folder-open text-2xl text-purple-400"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-3">Dosya Ayırıcı & Karşılaştırıcı</h2>
+                <h2 class="text-2xl font-bold text-white mb-3">Dosya Ayırıcı</h2>
                 <p class="text-slate-400 mb-6 h-20">
                     Klasörlerinizdeki karmaşaya son verin. Dosyaları hash analizi ile karşılaştırın, kopyaları bulun ve temizleyin.
                 </p>
@@ -112,8 +112,25 @@
                     <span class="px-3 py-1 rounded-full bg-slate-800 text-xs font-mono text-slate-400">v1.0</span>
                     <span class="px-3 py-1 rounded-full bg-blue-500/10 text-xs font-medium text-blue-400">Yeni</span>
                 </div>
-                <!-- URL FOR DOSYA AYIRICI EKLENDİ -->
                 <a href="{{ url_for('dosya_ayirici') }}" class="w-full block text-center py-4 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition border border-slate-700">
+                    İncele ve İndir <i class="fas fa-arrow-right ml-2 text-sm"></i>
+                </a>
+            </div>
+
+            <!-- Card 3: Bekra System Care (YENİ EKLENDİ) -->
+            <div class="glass-panel p-8 rounded-2xl border border-slate-700/50 hover:border-red-500/50 transition duration-300 group hover:-translate-y-2">
+                <div class="w-14 h-14 rounded-xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                    <i class="fas fa-microchip text-2xl text-red-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-3">Bekra System Care</h2>
+                <p class="text-slate-400 mb-6 h-20">
+                    RAM kullanımını düşürün, gereksiz dosyaları temizleyin ve sistem performansını anlık olarak izleyin.
+                </p>
+                <div class="flex items-center gap-4 mb-8">
+                    <span class="px-3 py-1 rounded-full bg-slate-800 text-xs font-mono text-slate-400">v1.0</span>
+                    <span class="px-3 py-1 rounded-full bg-red-500/10 text-xs font-medium text-red-400">Pro</span>
+                </div>
+                <a href="{{ url_for('bekra_detail') }}" class="w-full block text-center py-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 text-white font-semibold hover:from-red-500 hover:to-rose-600 transition shadow-lg shadow-red-900/20">
                     İncele ve İndir <i class="fas fa-arrow-right ml-2 text-sm"></i>
                 </a>
             </div>
