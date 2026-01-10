@@ -4,7 +4,10 @@ from tkinter import messagebox
 import os
 import threading
 import subprocess
+import webbrowser
+from pathlib import Path
 from logic import load_json_data, SystemInfo, Tweaker, WingetManager, UninstallManager, ChocolateyManager
+import self_update
 
 # --- ANA PENCERE ---
 class MainWindow(ctk.CTk):
@@ -12,7 +15,9 @@ class MainWindow(ctk.CTk):
         super().__init__()
 
         # Pencere Ayarları
-        self.title("Saydut Program Yöneticisi v3.0 Pro")
+        self.app_exe_name = "Saydut Program Yöneticisi.exe"
+        self.current_version = self_update.read_local_version(Path(os.getcwd()))
+        self.title(f"Saydut Program Yöneticisi v{self.current_version}")
         self.geometry("1100x750")
         self.minsize(900, 650)
         
@@ -29,7 +34,7 @@ class MainWindow(ctk.CTk):
         self.logo_label = ctk.CTkLabel(self.sidebar, text="SAYDUT\nYAZILIM", font=ctk.CTkFont(size=22, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(30, 10))
         
-        self.lbl_version = ctk.CTkLabel(self.sidebar, text="v3.0.1 Stable", text_color="gray")
+        self.lbl_version = ctk.CTkLabel(self.sidebar, text=f"v{self.current_version} Stable", text_color="gray")
         self.lbl_version.grid(row=1, column=0, padx=20, pady=(0, 20))
 
         # Menü Butonları
@@ -42,7 +47,7 @@ class MainWindow(ctk.CTk):
         self.btn_tweaks = self.create_sidebar_btn("🛠️ Tweakler", self.show_tweaks)
         self.btn_tweaks.grid(row=4, column=0, padx=20, pady=8)
         
-        self.btn_updates = self.create_sidebar_btn("🔄 Güncelle", self.show_updates)
+        self.btn_updates = self.create_sidebar_btn("🔄 Uygulama Güncelle", self.show_updates)
         self.btn_updates.grid(row=5, column=0, padx=20, pady=8)
         
         self.btn_uninstall = self.create_sidebar_btn("🗑️ Kaldır", self.show_uninstall)
@@ -75,6 +80,9 @@ class MainWindow(ctk.CTk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_programs() # Başlangıç sayfası
+        # Program (self) update kontrolü (sessiz)
+        self.after(1500, self._auto_check_launcher_update)
+
 
     def create_sidebar_btn(self, text, command):
         return ctk.CTkButton(self.sidebar, text=text, command=command, 
@@ -97,10 +105,168 @@ class MainWindow(ctk.CTk):
         self.frames[SystemFrame].refresh() 
     def show_about(self): self.show_frame(AboutFrame)
 
+    
+    # ---------------- SELF UPDATE (Programın kendisi) ----------------
+    def _auto_check_self_update(self):
+        # Sessiz kontrol: hata mesajı yok
+        threading.Thread(target=self._self_update_worker, args=(False,), daemon=True).start()
+
+    def _check_self_update_manual(self):
+        threading.Thread(target=self._self_update_worker, args=(True,), daemon=True).start()
+
+    def _self_update_worker(self, show_messages: bool):
+        try:
+            install_dir = Path(os.getcwd())
+            current = self_update.read_local_version(install_dir)
+            rel = self_update.fetch_latest_release()
+            latest = self_update._normalize_version(rel.tag)
+
+            if not self_update.is_newer(latest, current):
+                if show_messages:
+                    messagebox.showinfo("Güncelleme", "Program güncel.")
+                return
+
+            def open_dialog():
+                dlg = None
+
+                def on_later():
+                    try:
+                        dlg.destroy()
+                    except Exception:
+                        pass
+
+                def on_update():
+                    # download then run updater
+                    dlg.btn_update.configure(state="disabled")
+                    dlg.btn_later.configure(state="disabled")
+                    dlg.status.configure(text="İndiriliyor...")
+
+                    def progress(done, total):
+                        if total > 0:
+                            pct = int(done * 100 / total)
+                            dlg.status.configure(text=f"İndiriliyor... %{pct}")
+                        else:
+                            dlg.status.configure(text="İndiriliyor...")
+
+                    try:
+                        zpath = self_update.TEMP_ROOT / rel.zip_name
+                        self_update.download_file(rel.zip_url, zpath, progress_cb=progress)
+                        dlg.status.configure(text="Kurulum başlatılıyor...")
+                        # updater çağır ve uygulamayı kapat
+                        self_update.run_updater(install_dir, zpath, self.app_exe_name)
+                        self.after(200, self.destroy)
+                    except Exception as e:
+                        dlg.status.configure(text=f"Hata: {e}")
+                        dlg.btn_later.configure(state="normal")
+
+                dlg = SelfUpdateDialog(self, latest, rel.body, on_update, on_later)
+
+            self.after(0, open_dialog)
+
+        except Exception as e:
+            if show_messages:
+                messagebox.showerror("Güncelleme Hatası", str(e))
+            # sessizde yut
+
+    def _auto_check_launcher_update(self):
+        threading.Thread(target=self._launcher_update_worker, daemon=True).start()
+
+    def _launcher_update_worker(self):
+        try:
+            install_dir = Path(os.getcwd())
+            current = self_update.read_local_version(install_dir)
+            payload = self_update.fetch_programs_manifest()
+            latest = self_update.read_program_version(payload, "program-yoneticisi")
+            if latest and self_update.is_newer(latest, current):
+                self.after(0, lambda: self._show_launcher_update_prompt(current, latest))
+        except Exception:
+            return
+
+    def _show_launcher_update_prompt(self, current: str, latest: str):
+        if messagebox.askyesno(
+            "Güncelleme mevcut",
+            f"Mevcut sürüm: {current}\nYeni sürüm: {latest}\n\nGüncellemeyi Saydut Launcher ile yapmak ister misin?",
+        ):
+            self.open_launcher_update()
+
+    def open_launcher_update(self):
+        launcher_hint_path = r"C:\Saydut\launcher_path.txt"
+        launcher_candidates = [
+            r"C:\Saydut\SaydutLauncher\SaydutLauncher.exe",
+            r"C:\Saydut\Saydut Launcher\SaydutLauncher.exe",
+            r"C:\Saydut\SaydutLauncher\Saydut Launcher.exe",
+        ]
+
+        launcher_path = None
+        if os.path.exists(launcher_hint_path):
+            try:
+                with open(launcher_hint_path, "r", encoding="utf-8") as handle:
+                    candidate = handle.read().strip()
+                if candidate and os.path.exists(candidate):
+                    launcher_path = candidate
+            except OSError:
+                launcher_path = None
+
+        if not launcher_path:
+            launcher_path = next((p for p in launcher_candidates if os.path.exists(p)), None)
+
+        if launcher_path:
+            try:
+                if launcher_path.lower().endswith(".py"):
+                    subprocess.Popen([sys.executable, launcher_path])
+                else:
+                    subprocess.Popen([launcher_path])
+                return
+            except Exception as exc:
+                messagebox.showerror("Hata", f"Launcher acilamadi:\n{exc}")
+                return
+
+        messagebox.showinfo(
+            "Launcher Gerekli",
+            "Guncelleme icin Saydut Launcher gerekli.\nIndirip kurduktan sonra tekrar deneyin.",
+        )
+        webbrowser.open("https://www.saydut.com")
+
     def change_appearance_mode_event(self, new_appearance_mode: str):
         ctk.set_appearance_mode(new_appearance_mode)
 
 # --- 1. PROGRAMLAR SAYFASI ---
+
+
+# --- PROGRAM (SELF) UPDATE DIALOG ---
+class SelfUpdateDialog(ctk.CTkToplevel):
+    def __init__(self, master, latest_version: str, release_notes: str, on_update, on_later):
+        super().__init__(master)
+        self.title("Yeni sürüm bulundu")
+        self.geometry("620x520")
+        self.resizable(False, False)
+        self.grab_set()
+
+        wrap = ctk.CTkFrame(self, corner_radius=14)
+        wrap.pack(fill="both", expand=True, padx=16, pady=16)
+
+        ctk.CTkLabel(wrap, text="Yeni sürüm bulundu", font=("Arial", 22, "bold")).pack(anchor="w", padx=16, pady=(14, 0))
+        ctk.CTkLabel(wrap, text=f"Yeni sürüm: v{latest_version}", text_color="gray").pack(anchor="w", padx=16, pady=(2, 10))
+
+        ctk.CTkLabel(wrap, text="Yenilikler", font=("Arial", 14, "bold")).pack(anchor="w", padx=16, pady=(6, 6))
+        notes = ctk.CTkTextbox(wrap, height=300, corner_radius=10)
+        notes.pack(fill="both", expand=False, padx=16)
+        notes.insert("1.0", release_notes.strip() or "(Not bulunamadı)")
+        notes.configure(state="disabled")
+
+        self.status = ctk.CTkLabel(wrap, text="", text_color="gray")
+        self.status.pack(anchor="w", padx=16, pady=(10, 0))
+
+        btnrow = ctk.CTkFrame(wrap, fg_color="transparent")
+        btnrow.pack(fill="x", padx=16, pady=14)
+
+        self.btn_update = ctk.CTkButton(btnrow, text="Güncelle", command=on_update, height=38)
+        self.btn_update.pack(side="right")
+
+        self.btn_later = ctk.CTkButton(btnrow, text="Sonra", command=on_later, height=38, fg_color="#2b2b2b")
+        self.btn_later.pack(side="right", padx=(0, 10))
+
+
 class ProgramsFrame(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="transparent")
@@ -691,7 +857,9 @@ class AboutFrame(ctk.CTkFrame):
         container.place(relx=0.5, rely=0.5, anchor="center")
         
         ctk.CTkLabel(container, text="Saydut Program Yöneticisi", font=("Inter", 30, "bold")).pack(padx=50, pady=(40, 10))
-        ctk.CTkLabel(container, text="v3.0.1 Pro Edition", font=("Inter", 16)).pack(pady=5)
+        ctk.CTkLabel(container, text=f"v{controller.current_version} Pro Edition", font=("Inter", 16)).pack(pady=5)
+        ctk.CTkButton(container, text="Program Güncellemesini Kontrol Et", command=controller._check_self_update_manual, height=36).pack(pady=(18, 0))
+
         
         desc = ("Bu araç, sistem yönetimini kolaylaştırmak, programları güncellemek,\n"
                 "gereksiz dosyaları temizlemek ve Windows ayarlarını optimize etmek\n"
