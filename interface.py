@@ -2,12 +2,15 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
 import os
+import sys
 import threading
 import subprocess
 import webbrowser
 from pathlib import Path
 from logic import load_json_data, SystemInfo, Tweaker, WingetManager, UninstallManager, ChocolateyManager
 import self_update
+
+APP_VERSION = "2.0.0"
 
 # --- ANA PENCERE ---
 class MainWindow(ctk.CTk):
@@ -16,7 +19,9 @@ class MainWindow(ctk.CTk):
 
         # Pencere Ayarları
         self.app_exe_name = "Saydut Program Yöneticisi.exe"
-        self.current_version = self_update.read_local_version(Path(os.getcwd()))
+        self.current_version = self_update.read_local_version(self._resolve_install_dir())
+        if self.current_version in ("", "0.0.0"):
+            self.current_version = APP_VERSION
         self.title(f"Saydut Program Yöneticisi v{self.current_version}")
         self.geometry("1100x750")
         self.minsize(900, 650)
@@ -83,6 +88,11 @@ class MainWindow(ctk.CTk):
         # Program (self) update kontrolü (sessiz)
         self.after(1500, self._auto_check_launcher_update)
 
+    def _resolve_install_dir(self) -> Path:
+        if getattr(sys, "frozen", False):
+            return Path(sys.executable).resolve().parent
+        return Path(__file__).resolve().parent
+
 
     def create_sidebar_btn(self, text, command):
         return ctk.CTkButton(self.sidebar, text=text, command=command, 
@@ -116,8 +126,8 @@ class MainWindow(ctk.CTk):
 
     def _self_update_worker(self, show_messages: bool):
         try:
-            install_dir = Path(os.getcwd())
-            current = self_update.read_local_version(install_dir)
+            install_dir = self._resolve_install_dir()
+            current = self.current_version
             rel = self_update.fetch_latest_release()
             latest = self_update._normalize_version(rel.tag)
 
@@ -173,8 +183,7 @@ class MainWindow(ctk.CTk):
 
     def _launcher_update_worker(self):
         try:
-            install_dir = Path(os.getcwd())
-            current = self_update.read_local_version(install_dir)
+            current = self.current_version
             payload = self_update.fetch_programs_manifest()
             latest = self_update.read_program_version(payload, "program-yoneticisi")
             if latest and self_update.is_newer(latest, current):
